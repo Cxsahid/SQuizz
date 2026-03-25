@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SQuizz - Premium Quiz Experience</title>
+    <!-- Google Fonts: Outfit -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <!-- Main CSS -->
+    <link rel="stylesheet" href="./css/styles.css">
+</head>
+
+<body>
+    <canvas id="spaceBg"></canvas>
+
+    <!-- Background Decor (Blobs for gradient glow) -->
+    <div class="bg-shape blob-1"></div>
+    <div class="bg-shape blob-2"></div>
+
+    <div class="wrapper">
+        <!-- Navigation -->
+        <header class="navbar">
+            <div class="nav-container">
+                <a href="#" class="logo">SQuizz<span class="accent">.</span></a>
+                <nav class="nav-links">
+                    <a href="#" class="nav-link active" id="navHomeBtn">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                            <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                        </svg> Home
+                    </a>
+                    <a href="#" class="nav-link" id="navCategoriesBtn">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+                            <polyline points="2 17 12 22 22 17"></polyline>
+                            <polyline points="2 12 12 17 22 12"></polyline>
+                        </svg> Categories
+                    </a>
+                    <a href="#" class="nav-link" id="navLeaderboardBtn">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"></path>
+                            <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"></path>
+                            <path d="M4 22h16"></path>
+                            <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"></path>
+                            <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"></path>
+                            <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"></path>
+                        </svg> Leaderboard
+                    </a>
+                    <button class="btn btn-glass" id="themeToggleBtn"
+                        style="padding: 0.3rem 0.8rem; font-size: 0.8rem; margin-left: 1rem;">☀️ Light</button>
+                </nav>
+                <div class="nav-actions" id="userNavDisplay">
+                    <!-- Javascript will inject login button or username here -->
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <section id="view-hero" class="view-section active" style="padding:0;">
+                <div class="hero-section">
+                    <div class="hero-bg-shapes">
+                        <div class="shape shape-1"></div>
+                        <div class="shape shape-2"></div>
+                        <div class="shape shape-3"></div>
+                    </div>
+                    <div class="hero-text">
+                        <div class="badge-wrapper">
+                            <span class="pulse-dot"></span>
+                            <span class="badge-text">New Multiplayer Mode Live</span>
+                        </div>
+                        <h1 class="hero-title">Unlock Your Potential with <span class="text-gradient">SQuizz</span></h1>
+                        <p class="hero-subtitle" id="heroSubtitle">Engage in interactive, premium quizzes across tech,
+                            science, pop culture, and more. Test your knowledge and climb the global ranks.</p>
+                        <div class="hero-cta">
+                            <button class="btn btn-primary btn-lg" id="startBtn">Start Playing <span
+                                    class="arrow">→</span></button>
+                            <button class="btn btn-outline btn-lg" id="exploreBtn">Explore Topics</button>
+                        </div>
+                        <div class="stats">
+                            <div class="stat-item">
+                                <h3>50k+</h3>
+                                <p>Active Users</p>
+                            </div>
+                            <div class="stat-divider"></div>
+                            <div class="stat-item">
+                                <h3>10k+</h3>
+                                <p>Questions</p>
+                            </div>
+                            <div class="stat-divider"></div>
+                            <div class="stat-item">
+                                <h3>4.9/5</h3>
+                                <p>Rating</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 3D/Glassmorphism Visual Composition -->
+                    <div class="hero-visual">
+                        <div class="glass-card main-card">
+                            <div class="card-header">
+                                <span class="pill trending">🔥 Trending</span>
+                                <div class="window-controls"><span></span><span></span><span></span></div>
+                            </div>
+                            <div class="card-image-placeholder">
+                                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="brain-icon">
+                                    <path
+                                        d="M12 5a3 3 0 1 0-5.997.125 4 4 0 0 0-2.526 5.77 4 4 0 0 0 .556 6.588A4 4 0 1 0 12 18Z">
+                                    </path>
+                                    <path
+                                        d="M12 5a3 3 0 1 1 5.997.125 4 4 0 0 1 2.526 5.77 4 4 0 0 1-.556 6.588A4 4 0 1 1 12 18Z">
+                                    </path>
+                                    <path d="M15 13a4.5 4.5 0 0 1-3-4 4.5 4.5 0 0 1-3 4"></path>
+                                    <path d="M17.599 6.5a3 3 0 0 0 .399-1.375"></path>
+                                    <path d="M6.003 5.125A3 3 0 0 0 6.401 6.5"></path>
+                                    <path d="M3.477 10.896a4 4 0 0 1 .585-.396"></path>
+                                    <path d="M19.938 10.5a4 4 0 0 1 .585.396"></path>
+                                    <path d="M6 18a4 4 0 0 1-1.967-.516"></path>
+                                    <path d="M19.967 17.484A4 4 0 0 1 18 18"></path>
+                                </svg>
+                            </div>
+                            <div class="card-body">
+                                <h3>Advanced JavaScript</h3>
+                                <p class="card-desc">Master closures, promises, and the event loop in this
+                                    advanced test.</p>
+                                <div class="progress-wrap">
+                                    <div class="progress-info">
+                                        <span>Level 7</span>
+                                        <span>75%</span>
+                                    </div>
+                                    <div class="progress-bar-bg">
+                                        <div class="progress-bar-fill" style="width: 75%"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="glass-card float-card float-1">
+                            <div class="icon-circle icon-purple">🏆</div>
+                            <div class="float-info">
+                                <h4>Top 1%</h4>
+                                <p>Global Rank</p>
+                            </div>
+                        </div>
+
+                        <div class="glass-card float-card float-2" id="streakCardContainer">
+                            <div class="icon-circle icon-blue"
+                                style="color: #f97316; text-shadow: 0 0 15px rgba(249, 115, 22, 0.6); font-size: 1.4rem;">
+                                🔥</div>
+                            <div class="float-info">
+                                <h4 id="streakCountText">0 Days</h4>
+                                <p>Streak <span id="warriorBadge" style="font-size: 0.8rem; font-weight: 600;"></span>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div> <!-- End of .hero-section -->
+
+                <!-- Platform Features Section -->
+                <div class="platform-features wrapper">
+                    <h2 class="section-title" style="margin-bottom: 3.5rem; font-size: 2.8rem;">Platform Features</h2>
+                    <div class="features-grid">
+                        <div class="feature-card" onclick="activateFeature('multiplayer')">
+                            <div class="feature-lines"></div>
+                            <div class="feature-icon">⚔️</div>
+                            <h3>Multiplayer Battle Mode</h3>
+                            <p>Play live quizzes with others in real-time</p>
+                        </div>
+                        <div class="feature-card" onclick="activateFeature('ai')">
+                            <div class="feature-lines"></div>
+                            <div class="feature-icon">🤖</div>
+                            <h3>AI Quiz Generator</h3>
+                            <p>Generate quizzes instantly using AI</p>
+                        </div>
+                        <div class="feature-card" onclick="activateFeature('streak')">
+                            <div class="feature-lines"></div>
+                            <div class="feature-icon">🔥</div>
+                            <h3>Daily Streak Rewards</h3>
+                            <p>Earn rewards by maintaining streaks</p>
+                        </div>
+                        <div class="feature-card" onclick="activateFeature('leaderboard')">
+                            <div class="feature-lines"></div>
+                            <div class="feature-icon">🌍</div>
+                            <h3>Global Leaderboard</h3>
+                            <p>Compete with players worldwide</p>
+                        </div>
+                        <div class="feature-card" onclick="activateFeature('smart')">
+                            <div class="feature-lines"></div>
+                            <div class="feature-icon">🧠</div>
+                            <h3>Smart Learning Mode</h3>
+                            <p>Personalized quizzes based on performance</p>
+                        </div>
+                        <div class="feature-card" onclick="activateFeature('voice')">
+                            <div class="feature-lines"></div>
+                            <div class="feature-icon">🎙️</div>
+                            <h3>Voice Quiz Mode</h3>
+                            <p>Answer questions using voice (Accessible)</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Login View -->
+            <section id="view-login" style="display: none;" class="view-section text-center">
+                <div class="glass-card login-card">
+                    <h2 class="section-title" style="margin-bottom: 1.5rem; text-shadow: var(--glow-cyan);">Access
+                        Portal</h2>
+                    <p style="color: var(--text-secondary); margin-bottom: 2.5rem; font-size: 1.05rem;">Enter your
+                        credentials to continue your journey.</p>
+                    <input type="text" id="loginIdentifier" class="input-field" placeholder="Username or Email ID"
+                        autocomplete="off">
+                    <input type="password" id="loginPassword" class="input-field" placeholder="Password"
+                        autocomplete="off">
+                    <p id="loginError" style="color: #ef4444; margin-top: 0.5rem; display: none;">Invalid credentials.
+                    </p>
+                    <button class="btn btn-primary btn-lg mt-4" id="loginSubmitBtn" style="width: 100%;">Log In <span
+                            class="arrow">→</span></button>
+                    <p style="margin-top: 1.5rem; color: var(--text-secondary); font-size: 0.95rem;">New here? <a
+                            href="#" id="linkToRegister" style="color: var(--primary); font-weight: 500;">Register
+                            instead</a></p>
+                </div>
+            </section>
+
+            <!-- Register View -->
+            <section id="view-register" style="display: none;" class="view-section text-center">
+                <div class="glass-card login-card">
+                    <h2 class="section-title" style="margin-bottom: 1.5rem; text-shadow: var(--glow-cyan);">Join SQuizz
+                    </h2>
+                    <p style="color: var(--text-secondary); margin-bottom: 2.5rem; font-size: 1.05rem;">Create a new
+                        account to calculate your global rank.</p>
+                    <input type="text" id="regUsername" class="input-field" placeholder="Choose a Username"
+                        maxlength="15" autocomplete="off">
+                    <input type="email" id="regEmail" class="input-field" placeholder="Email ID" autocomplete="off">
+                    <input type="password" id="regPassword" class="input-field" placeholder="Create a new Password"
+                        autocomplete="off">
+                    <p id="regError" style="color: #ef4444; margin-top: 0.5rem; display: none;">Error creating account.
+                    </p>
+                    <button class="btn btn-primary btn-lg mt-4" id="regSubmitBtn" style="width: 100%;">Register Account
+                        <span class="arrow">→</span></button>
+                    <p style="margin-top: 1.5rem; color: var(--text-secondary); font-size: 0.95rem;">Already have an
+                        account? <a href="#" id="linkToLogin" style="color: var(--primary); font-weight: 500;">Log
+                            in</a></p>
+                </div>
+            </section>
+
+            <!-- Multiplayer Room View -->
+            <section id="view-multiplayer" style="display: none;" class="view-section">
+                <!-- Lobby Selection -->
+                <div id="multiplayerSelection" class="hero-section"
+                    style="display: grid; grid-template-columns: 1fr 1fr; gap: 4rem; align-items: start; margin-top: 2rem;">
+                    <!-- Create Room -->
+                    <div class="glass-card login-card" style="margin: 0; width: 100%;">
+                        <h2 class="section-title" style="margin-bottom: 1.5rem; text-shadow: var(--glow-cyan);">Host a
+                            Match</h2>
+                        <p style="color: var(--text-secondary); margin-bottom: 2rem;">Select a category and challenge
+                            your friends.</p>
+                        <select id="mpHostCategory" class="input-field"
+                            style="margin-bottom: 1.5rem; background: rgba(0,0,0,0.5);">
+                            <!-- populated dynamically by JS -->
+                        </select>
+                        <button class="btn btn-primary btn-lg" id="btnCreateRoom" style="width: 100%;">Create Room <span
+                                class="arrow">→</span></button>
+                    </div>
+
+                    <!-- Join Room -->
+                    <div class="glass-card login-card" style="margin: 0; width: 100%;">
+                        <h2 class="section-title" style="margin-bottom: 1.5rem; text-shadow: var(--glow-cyan);">Join a
+                            Match</h2>
+                        <p style="color: var(--text-secondary); margin-bottom: 2rem;">Enter a 6-digit Room Code to enter
+                            the battle.</p>
+                        <input type="text" id="mpJoinCode" class="input-field" placeholder="e.g. A1B2C3" maxlength="6"
+                            style="text-transform: uppercase;">
+                        <button class="btn btn-outline btn-lg mt-4" id="btnJoinRoom" style="width: 100%;">Join Room
+                            <span class="arrow">→</span></button>
+                    </div>
+                </div>
+
+                <!-- Active Lobby (Waiting Room) -->
+                <div id="multiplayerLobby" style="display: none; max-width: 800px; margin: 0 auto; position: relative;">
+                    <button class="btn btn-outline" onclick="location.reload()"
+                        style="position:absolute; top: -3rem; left: 0;">← Leave Lobby</button>
+                    <div class="glass-card" style="text-align: center; padding: 3rem;">
+                        <h2 style="font-size: 3.5rem; letter-spacing: 5px; color: var(--primary); text-shadow: var(--glow-cyan); margin-bottom: 0.5rem;"
+                            id="lobbyRoomCodeDisplay">------</h2>
+                        <p
+                            style="color: var(--text-secondary); text-transform: uppercase; letter-spacing: 2px; margin-bottom: 3rem;">
+                            Room Code ID</p>
+
+                        <div
+                            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 1rem;">
+                            <h3 style="font-size: 1.4rem;">Connected Players (<span id="mpPlayerCount">1</span>)</h3>
+                            <button class="btn btn-primary" id="btnStartGame" style="display: none;">Start Match
+                                Now</button>
+                        </div>
+
+                        <div id="mpPlayerList"
+                            style="display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 1rem; text-align: left;">
+                            <!-- Players injected here -->
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Category Selection View -->
+            <section id="view-categories" style="display: none;" class="view-section">
+                <div class="explore-header">
+                    <h2 class="section-title" id="exploreTitle">Explore Topics</h2>
+                    <div class="search-container" id="exploreSearchContainer">
+                        <div class="search-box">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="11" cy="11" r="8"></circle>
+                                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                            </svg>
+                            <input type="text" id="topicSearchInput" class="input-field"
+                                placeholder="Search for quizzes or topics..." autocomplete="off">
+                        </div>
+                        <div class="instant-results" id="instantResults" style="display: none;"></div>
+                    </div>
+                    <div class="filter-controls">
+                        <div class="tag-bar" id="tagBar">
+                            <button class="tag active" data-tag="all">All</button>
+                            <button class="tag" data-tag="JavaScript">#JavaScript</button>
+                            <button class="tag" data-tag="WebDev">#WebDev</button>
+                            <button class="tag" data-tag="DataScience">#DataScience</button>
+                            <button class="tag" data-tag="PopCulture">#PopCulture</button>
+                            <button class="tag" data-tag="Database">#Database</button>
+                        </div>
+                        <div class="sort-dropdown-container">
+                            <select id="sortTopics" class="input-field sort-dropdown">
+                                <option value="popular">Most Popular</option>
+                                <option value="newest">Newest</option>
+                                <option value="easiest">Easiest for Beginners</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="category-grid" id="categoryGrid"></div>
+            </section>
+
+            <!-- Active Quiz View -->
+            <section id="view-quiz" style="display: none;" class="view-section">
+                <div class="quiz-header">
+                    <span class="category-badge" id="quizCategoryBadge">Category</span>
+                    <span class="timer-badge" id="quizTimer">00:15</span>
+                    <span class="question-counter">Question <span id="qCurrent">1</span>/<span
+                            id="qTotal">10</span></span>
+                </div>
+                <div class="glass-card quiz-card">
+                    <h3 id="questionText" class="question-text">Loading question...</h3>
+                    <div class="options-grid" id="optionsGrid">
+                        <!-- Option buttons injected here by JS -->
+                    </div>
+                </div>
+                <div class="quiz-footer">
+                    <button class="btn btn-outline" id="prevBtn" disabled>Previous</button>
+                    <button class="btn btn-primary" id="nextBtn" disabled>Next</button>
+                </div>
+            </section>
+
+            <!-- Leaderboard View -->
+            <section id="view-leaderboard" style="display: none;" class="view-section">
+                <h2 class="section-title">Global Rankings</h2>
+                <div class="glass-card quiz-card" style="padding: 2rem;">
+                    <div id="leaderboardContent">
+                        <!-- Ranks injected here -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- Result View -->
+            <section id="view-result" style="display: none;" class="view-section text-center">
+                <div class="glass-card result-card">
+                    <h2>Quiz Complete!</h2>
+                    <div class="score-circle">
+                        <span id="finalScoreText" class="text-gradient score-huge">0/0</span>
+                        <p>Score</p>
+                    </div>
+                    <div class="result-stats">
+                        <p>Time Taken: <span id="totalTimeText" class="text-gradient">00:00</span></p>
+                        <p>Accuracy: <span id="accuracyText" class="text-gradient">0%</span></p>
+                    </div>
+                    <p id="resultMessage" class="result-msg"></p>
+                    <button class="btn btn-primary btn-lg mt-4" id="homeBtn">Go to Home</button>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Logic JS -->
+    <script src="./js/script.js"></script>
+    <!-- Toast Notification -->
+    <div id="toast" class="toast-notification"></div>
+
+    <!-- Live Multiplayer Leaderboard Container -->
+    <div id="liveMultiplayerLeaderboard" class="glass-card"
+        style="display:none; position:fixed; right:20px; top:120px; width:280px; padding:1.5rem; z-index: 100;">
+        <h3
+            style="font-size: 1rem; margin-bottom: 1rem; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 0.5rem; color: var(--primary);">
+            Live Standings 🏆</h3>
+        <div id="liveLBPillContainer" style="display: flex; flex-direction: column; gap: 0.5rem;"></div>
+    </div>
+
+    <!-- Socket.IO Engine -->
+    <script src="https://cdn.socket.io/4.6.0/socket.io.min.js"></script>
+</body>
+
+</html>

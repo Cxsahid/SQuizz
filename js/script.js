@@ -1,0 +1,992 @@
+// SQuizz Phase 1, 2 & 3 Logic
+const State = {
+    user: null, // Track logged-in username
+    view: 'hero',
+    categories: [],
+    currentCategory: null,
+    questions: [],
+    currentQuestionIndex: 0,
+    answers: [], // User selected answers (-1 for skipped)
+    
+    // Phase 2 State
+    questionTimeRemaining: 15,
+    questionTimerInterval: null,
+    totalSeconds: 0,
+    totalTimeInterval: null,
+
+    // Phase 7 Filters
+    currentTag: 'all',
+    currentSort: 'popular',
+    searchQuery: ''
+};
+
+const UI = {
+    views: {
+        login: document.getElementById('view-login'),
+        register: document.getElementById('view-register'),
+        hero: document.getElementById('view-hero'),
+        multiplayer: document.getElementById('view-multiplayer'),
+        categories: document.getElementById('view-categories'),
+        quiz: document.getElementById('view-quiz'),
+        result: document.getElementById('view-result'),
+        leaderboard: document.getElementById('view-leaderboard')
+    },
+    userNavDisplay: document.getElementById('userNavDisplay'),
+    usernameInput: document.getElementById('usernameInput'),
+    loginSubmitBtn: document.getElementById('loginSubmitBtn'),
+    leaderboardContent: document.getElementById('leaderboardContent'),
+    liveMultiplayerLeaderboard: document.getElementById('liveMultiplayerLeaderboard'),
+    liveLBPillContainer: document.getElementById('liveLBPillContainer'),
+    navHomeBtn: document.getElementById('navHomeBtn'),
+    navCategoriesBtn: document.getElementById('navCategoriesBtn'),
+    navLeaderboardBtn: document.getElementById('navLeaderboardBtn'),
+    themeToggleBtn: document.getElementById('themeToggleBtn'),
+    // Phase 7 Elements
+    topicSearchInput: document.getElementById('topicSearchInput'),
+    instantResults: document.getElementById('instantResults'),
+    tagBar: document.getElementById('tagBar'),
+    sortTopics: document.getElementById('sortTopics'),
+    exploreTitle: document.getElementById('exploreTitle'),
+    exploreSearchContainer: document.getElementById('exploreSearchContainer'),
+    btnStart: document.getElementById('startBtn'),
+    btnExplore: document.getElementById('exploreBtn'),
+    categoryGrid: document.getElementById('categoryGrid'),
+    // Quiz Elements
+    quizCategoryBadge: document.getElementById('quizCategoryBadge'),
+    quizTimer: document.getElementById('quizTimer'),
+    qCurrent: document.getElementById('qCurrent'),
+    qTotal: document.getElementById('qTotal'),
+    questionText: document.getElementById('questionText'),
+    optionsGrid: document.getElementById('optionsGrid'),
+    prevBtn: document.getElementById('prevBtn'),
+    nextBtn: document.getElementById('nextBtn'),
+    // Result Elements
+    finalScoreText: document.getElementById('finalScoreText'),
+    totalTimeText: document.getElementById('totalTimeText'),
+    accuracyText: document.getElementById('accuracyText'),
+    resultMessage: document.getElementById('resultMessage'),
+    homeBtn: document.getElementById('homeBtn')
+};
+
+async function init() {
+    initSpaceBg();
+    bindEvents();
+    checkUser();
+    await loadData();
+}
+
+// Interactive Canvas Background
+const canvas = document.getElementById('spaceBg');
+const ctx = canvas?.getContext('2d');
+let particles = [];
+
+function initSpaceBg() {
+    if(!canvas || !ctx) return;
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    particles = [];
+    for(let i=0; i<150; i++) {
+        particles.push({
+            x: Math.random() * canvas.width,
+            y: Math.random() * canvas.height,
+            size: Math.random() * 2,
+            speed: Math.random() * 0.5 + 0.1
+        });
+    }
+    animateSpace();
+}
+
+function animateSpace() {
+    if(!canvas || !ctx) return;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    const isLight = document.body.classList.contains('light-mode');
+    ctx.fillStyle = isLight ? 'rgba(0,0,0,0.1)' : 'rgba(6,182,212,0.3)';
+    
+    particles.forEach(p => {
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+        ctx.fill();
+        p.y -= p.speed; 
+        if(p.y < 0) {
+            p.y = canvas.height;
+            p.x = Math.random() * canvas.width;
+        }
+    });
+    requestAnimationFrame(animateSpace);
+}
+
+window.addEventListener('resize', () => {
+    if(canvas) {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+    }
+});
+
+function checkUser() {
+    const storedUser = localStorage.getItem('squizz_active_user');
+    if (storedUser) {
+        State.user = storedUser;
+        updateNavUser();
+    } else {
+        renderLoggedOutNav();
+    }
+}
+
+function renderLoggedOutNav() {
+    if(UI.userNavDisplay) {
+        UI.userNavDisplay.innerHTML = `<button class="btn btn-glass" id="navLoginBtn">Log In</button><button class="btn btn-primary" id="navRegisterBtn" style="margin-left:1rem;">Register</button>`;
+        document.getElementById('navLoginBtn').addEventListener('click', () => switchView('login'));
+        document.getElementById('navRegisterBtn').addEventListener('click', () => switchView('register'));
+    }
+}
+
+function updateNavUser() {
+    if (State.user && UI.userNavDisplay) {
+        UI.userNavDisplay.innerHTML = `<span class="user-badge" style="margin-right: 15px;">👾 ${State.user}</span> <button class="btn btn-outline" style="padding: 0.3rem 0.8rem; font-size: 0.8rem;" id="logoutBtn">Logout</button>`;
+        // NEW API Hook to check Daily Streak
+        fetchUserStreak();
+
+        document.getElementById('logoutBtn').addEventListener('click', () => {
+            localStorage.removeItem('squizz_active_user');
+            State.user = null;
+            renderLoggedOutNav();
+            switchView('hero');
+        });
+    }
+}
+
+// --- Backend API Integration (Flask/SQLite) ---
+async function fetchUserStreak() {
+    if(!State.user) return;
+    try {
+        const res = await fetch(`/api/user/${State.user}`);
+        if(res.ok) {
+            const data = await res.json();
+            const streakText = document.getElementById('streakCountText');
+            const badgeText = document.getElementById('warriorBadge');
+            
+            if(streakText) streakText.textContent = `${data.streak} Days`;
+            if(badgeText) {
+                badgeText.textContent = data.badges.includes('7-Day Warrior') ? ' | 🛡️ Warrior' : '';
+                badgeText.style.color = data.badges.includes('7-Day Warrior') ? '#fbbf24' : 'inherit';
+            }
+        }
+    } catch(e) { console.log('Streak API offline. Running in Local-Only mode.'); }
+}
+
+async function logActivity() {
+    if(!State.user) return;
+    try {
+        await fetch('/api/activity', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({username: State.user})
+        });
+        fetchUserStreak(); // Trigger visual update of the fire badge
+    } catch(e) { console.log('Streak API offline. Running in Local-Only mode.'); }
+}
+
+async function loadData() {
+    try {
+        const res = await fetch('./data/questions.json');
+        const data = await res.json();
+        State.categories = data.categories;
+        renderCategories();
+    } catch (e) {
+        console.error("Failed to load questions", e);
+    }
+}
+
+function bindEvents() {
+    // Search & Filter Features (Phase 7)
+    if(UI.topicSearchInput) {
+        UI.topicSearchInput.addEventListener('input', (e) => {
+            State.searchQuery = e.target.value.trim();
+            
+            // Instant Results logic
+            if(State.searchQuery.length > 0) {
+                const matches = State.categories.filter(c => c.name.toLowerCase().includes(State.searchQuery.toLowerCase()));
+                UI.instantResults.style.display = 'block';
+                if(matches.length > 0) {
+                    UI.instantResults.innerHTML = matches.map(m => {
+                        const regex = new RegExp(`(${State.searchQuery})`, "gi");
+                        const highlighted = m.name.replace(regex, "<span class='highlight'>$1</span>");
+                        return `<div class="instant-result-item" data-id="${m.id}"><span>${m.icon} &nbsp;${highlighted}</span><span style="font-size:0.8rem; color:var(--primary); font-weight:bold;">Play 🚀</span></div>`;
+                    }).join('');
+                    
+                    document.querySelectorAll('.instant-result-item').forEach(item => {
+                        item.addEventListener('click', () => {
+                            const cat = State.categories.find(c => c.id === item.dataset.id);
+                            if(cat) startQuiz(cat);
+                            UI.instantResults.style.display = 'none';
+                            UI.topicSearchInput.value = '';
+                            State.searchQuery = '';
+                        });
+                    });
+                } else {
+                    UI.instantResults.innerHTML = '<div class="instant-result-item" style="justify-content:center;">No matches found.</div>';
+                }
+            } else {
+                UI.instantResults.style.display = 'none';
+            }
+            renderCategories();
+        });
+        
+        // Hide dropdown on clicking outside
+        document.addEventListener('click', (e) => {
+            if(!e.target.closest('.search-container')) {
+                UI.instantResults.style.display = 'none';
+            }
+        });
+    }
+
+    if(UI.tagBar) {
+        UI.tagBar.addEventListener('click', (e) => {
+            if(e.target.classList.contains('tag')) {
+                document.querySelectorAll('.tag').forEach(t => t.classList.remove('active'));
+                e.target.classList.add('active');
+                State.currentTag = e.target.dataset.tag;
+                renderCategories();
+            }
+        });
+    }
+
+    if(UI.sortTopics) {
+        UI.sortTopics.addEventListener('change', (e) => {
+            State.currentSort = e.target.value;
+            renderCategories();
+        });
+    }
+
+    // Login Form Logic
+    const loginIdentifier = document.getElementById('loginIdentifier');
+    const loginPassword = document.getElementById('loginPassword');
+    const loginError = document.getElementById('loginError');
+    if(UI.loginSubmitBtn) {
+        UI.loginSubmitBtn.addEventListener('click', () => {
+            const id = loginIdentifier.value.trim();
+            const pw = loginPassword.value.trim();
+            const users = JSON.parse(localStorage.getItem('squizz_users_db')) || [];
+            
+            const user = users.find(u => (u.username === id || u.email === id) && u.password === pw);
+            if(user) {
+                localStorage.setItem('squizz_active_user', user.username);
+                State.user = user.username;
+                updateNavUser();
+                switchView('hero');
+                loginError.style.display = 'none';
+                loginIdentifier.value = ''; loginPassword.value = '';
+            } else {
+                loginError.style.display = 'block';
+            }
+        });
+    }
+    
+    // Register Form Logic
+    const regUsername = document.getElementById('regUsername');
+    const regEmail = document.getElementById('regEmail');
+    const regPassword = document.getElementById('regPassword');
+    const regError = document.getElementById('regError');
+    const regSubmitBtn = document.getElementById('regSubmitBtn');
+    if(regSubmitBtn) {
+        regSubmitBtn.addEventListener('click', () => {
+            const u = regUsername.value.trim();
+            const e = regEmail.value.trim();
+            const p = regPassword.value.trim();
+            if(!u || !e || !p) {
+                regError.textContent = "All fields are required.";
+                regError.style.display = 'block';
+                return;
+            }
+            const users = JSON.parse(localStorage.getItem('squizz_users_db')) || [];
+            if(users.find(user => user.username === u || user.email === e)) {
+                regError.textContent = "Username or Email already taken.";
+                regError.style.display = 'block';
+                return;
+            }
+            users.push({ username: u, email: e, password: p });
+            localStorage.setItem('squizz_users_db', JSON.stringify(users));
+            localStorage.setItem('squizz_active_user', u);
+            State.user = u;
+            updateNavUser();
+            switchView('hero');
+            regError.style.display = 'none';
+            regUsername.value = ''; regEmail.value = ''; regPassword.value = '';
+        });
+    }
+    
+    // Auth View Swappers
+    const l2r = document.getElementById('linkToRegister');
+    const r2l = document.getElementById('linkToLogin');
+    if(l2r) l2r.addEventListener('click', (e) => { e.preventDefault(); switchView('register'); });
+    if(r2l) r2l.addEventListener('click', (e) => { e.preventDefault(); switchView('login'); });
+
+    if(UI.navHomeBtn) UI.navHomeBtn.addEventListener('click', () => switchView('hero'));
+    if(UI.navCategoriesBtn) {
+        UI.navCategoriesBtn.addEventListener('click', () => {
+            if(!State.user) {
+                switchView('login');
+            } else {
+                if(UI.exploreTitle) UI.exploreTitle.style.display = 'none';
+                if(UI.exploreSearchContainer) UI.exploreSearchContainer.style.display = 'none';
+                switchView('categories');
+            }
+        });
+    }
+    if(UI.navLeaderboardBtn) {
+        UI.navLeaderboardBtn.addEventListener('click', () => {
+            if(!State.user) switchView('login');
+            else showLeaderboard();
+        });
+    }
+
+    if(UI.themeToggleBtn) {
+        UI.themeToggleBtn.addEventListener('click', () => {
+            document.body.classList.toggle('light-mode');
+            if(document.body.classList.contains('light-mode')) {
+                UI.themeToggleBtn.textContent = '🌙 Dark';
+            } else {
+                UI.themeToggleBtn.textContent = '☀️ Light';
+            }
+        });
+    }
+
+    if(UI.btnStart) {
+        UI.btnStart.addEventListener('click', () => {
+            if(!State.user) {
+                switchView('login');
+            } else {
+                if(UI.exploreTitle) UI.exploreTitle.style.display = 'block';
+                if(UI.exploreSearchContainer) UI.exploreSearchContainer.style.display = 'block';
+                switchView('categories');
+            }
+        });
+    }
+
+    if(UI.btnExplore) {
+        UI.btnExplore.addEventListener('click', () => {
+            if(!State.user) {
+                switchView('login');
+            } else {
+                if(UI.exploreTitle) UI.exploreTitle.style.display = 'block';
+                if(UI.exploreSearchContainer) UI.exploreSearchContainer.style.display = 'block';
+                switchView('categories');
+            }
+        });
+    }
+
+    if(UI.prevBtn) UI.prevBtn.addEventListener('click', handlePrev);
+    if(UI.nextBtn) UI.nextBtn.addEventListener('click', handleNext);
+    if(UI.homeBtn) UI.homeBtn.addEventListener('click', () => {
+        resetQuiz();
+        switchView('hero');
+    });
+}
+
+function switchView(viewName) {
+    Object.values(UI.views).forEach(v => { 
+        if(v) {
+            v.style.display = 'none';
+            v.classList.remove('active');
+        }
+    });
+    
+    if(UI.views[viewName]) {
+        const target = UI.views[viewName];
+        target.style.display = 'block';
+        // Force reflow to reset CSS transition arrays
+        void target.offsetWidth;
+        target.classList.add('active');
+    }
+    
+    State.view = viewName;
+
+    if(viewName === 'hero') {
+        typeWriterSubtitle();
+    }
+}
+
+// Phase 11 Typewriter Effect
+let typewriterTimeout;
+function typeWriterSubtitle() {
+    clearTimeout(typewriterTimeout);
+    const subtitle = document.getElementById('heroSubtitle');
+    if(!subtitle) return;
+    
+    const originalText = "Engage in interactive, premium quizzes across tech, science, pop culture, and more. Test your knowledge and climb the global ranks.";
+    subtitle.innerHTML = '';
+    let i = 0;
+    
+    function type() {
+        if(i < originalText.length) {
+            subtitle.innerHTML = originalText.substring(0, i+1) + '<span class="blinking-cursor"></span>';
+            i++;
+            typewriterTimeout = setTimeout(type, 15);
+        } else {
+            subtitle.innerHTML = originalText + '<span class="blinking-cursor"></span>';
+        }
+    }
+    typewriterTimeout = setTimeout(type, 300);
+}
+
+function renderCategories() {
+    if(!UI.categoryGrid) return;
+    
+    // Apply Tag & Search Filters
+    let filtered = State.categories.filter(cat => {
+        const matchesTag = State.currentTag === 'all' || (cat.tags && cat.tags.includes(State.currentTag));
+        const matchesSearch = cat.name.toLowerCase().includes(State.searchQuery.toLowerCase());
+        return matchesTag && matchesSearch;
+    });
+
+    // Apply Sorting
+    if (State.currentSort === 'newest') {
+        filtered.sort((a,b) => b.addedAt.localeCompare(a.addedAt));
+    } else if (State.currentSort === 'easiest') {
+        filtered.sort((a,b) => a.difficultyValue - b.difficultyValue);
+    } else {
+        // Default popular
+        filtered = [...State.categories].filter(c => filtered.includes(c)); 
+    }
+
+    UI.categoryGrid.innerHTML = '';
+    
+    if(filtered.length === 0) {
+        UI.categoryGrid.innerHTML = '<p class="text-center" style="grid-column: 1/-1; color: var(--text-secondary); padding: 2rem;">No topics match your request.</p>';
+        return;
+    }
+
+    // Grouping by Subject concept
+    const grouped = {};
+    filtered.forEach(cat => {
+        const subj = cat.subject || "Other Subjects";
+        if(!grouped[subj]) grouped[subj] = [];
+        grouped[subj].push(cat);
+    });
+
+    // Render group blocks
+    for(const [subject, cats] of Object.entries(grouped)) {
+        const subjHeader = document.createElement('h3');
+        subjHeader.style.gridColumn = '1 / -1'; 
+        subjHeader.style.marginTop = '2.5rem';
+        subjHeader.style.marginBottom = '0.5rem';
+        subjHeader.style.borderBottom = '1px solid rgba(6, 182, 212, 0.3)';
+        subjHeader.style.paddingBottom = '0.5rem';
+        subjHeader.style.color = 'var(--text-primary)';
+        subjHeader.style.fontSize = '1.4rem';
+        subjHeader.style.textShadow = 'var(--glow-cyan)';
+        subjHeader.textContent = subject;
+        UI.categoryGrid.appendChild(subjHeader);
+
+        cats.forEach(cat => {
+            const btn = document.createElement('div');
+            btn.className = 'glass-card category-card';
+            btn.innerHTML = `<span class="cat-icon">${cat.icon}</span><h3>${cat.name}</h3>`;
+            btn.onclick = () => startQuiz(cat);
+            UI.categoryGrid.appendChild(btn);
+        });
+    }
+}
+
+// Phase 2: Adaptive Difficulty & Shuffling
+function generateAdaptiveQuestionSet(category) {
+    // Separate by difficulty
+    const easy = category.questions.filter(q => q.difficulty === 'easy').sort(() => Math.random() - 0.5);
+    const medium = category.questions.filter(q => q.difficulty === 'medium').sort(() => Math.random() - 0.5);
+    const hard = category.questions.filter(q => q.difficulty === 'hard').sort(() => Math.random() - 0.5);
+    
+    const path = [];
+    if (easy.length) path.push(easy.pop());
+    if (medium.length) path.push(medium.pop());
+    if (hard.length) path.push(hard.pop());
+    
+    // Fill remaining to get all questions 
+    const remaining = [...easy, ...medium, ...hard].sort(() => Math.random() - 0.5);
+    // Return max 10 questions per quiz
+    return [...path, ...remaining].slice(0, 10);
+}
+
+function startQuiz(category) {
+    State.currentCategory = category;
+    State.questions = generateAdaptiveQuestionSet(category);
+    State.currentQuestionIndex = 0;
+    State.answers = new Array(State.questions.length).fill(null);
+    
+    // Phase 2: Total Time Tracker
+    State.totalSeconds = 0;
+    clearInterval(State.totalTimeInterval);
+    State.totalTimeInterval = setInterval(() => State.totalSeconds++, 1000);
+
+    switchView('quiz');
+    renderQuestion();
+}
+
+// Phase 2: Question Timer
+function startQuestionTimer() {
+    clearInterval(State.questionTimerInterval);
+    // Dynamically pull from JSON configuration, fallback to 15s
+    State.questionTimeRemaining = State.currentCategory.timeLimit || 15;
+    updateTimerUI();
+    
+    State.questionTimerInterval = setInterval(() => {
+        State.questionTimeRemaining--;
+        updateTimerUI();
+        
+        if (State.questionTimeRemaining <= 0) {
+            clearInterval(State.questionTimerInterval);
+            // Auto skip / mark wrong
+            if (State.answers[State.currentQuestionIndex] === null) {
+                selectOption(-1); 
+            }
+        }
+    }, 1000);
+}
+
+function updateTimerUI() {
+    let t = State.questionTimeRemaining;
+    UI.quizTimer.textContent = `00:${t < 10 ? '0'+t : t}`;
+    if (t <= 5) {
+        UI.quizTimer.classList.add('timer-warning');
+    } else {
+        UI.quizTimer.classList.remove('timer-warning');
+    }
+}
+
+function renderQuestion() {
+    const q = State.questions[State.currentQuestionIndex];
+    UI.quizCategoryBadge.textContent = State.currentCategory.name;
+    UI.qCurrent.textContent = State.currentQuestionIndex + 1;
+    UI.qTotal.textContent = State.questions.length;
+    UI.questionText.textContent = q.q;
+
+    // Phase 13: Web Speech API Output for Accessibility Voice Mode
+    if(State.voiceMode && 'speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+        const utterance = new SpeechSynthesisUtterance(q.q);
+        window.speechSynthesis.speak(utterance);
+    }
+    
+    startQuestionTimer(); // Phase 2 setup
+    
+    UI.optionsGrid.innerHTML = '';
+    q.options.forEach((opt, idx) => {
+        const btn = document.createElement('button');
+        btn.className = 'btn btn-outline option-btn';
+        if (State.answers[State.currentQuestionIndex] === idx) {
+            btn.classList.add('selected');
+        } else if (State.answers[State.currentQuestionIndex] === -1) {
+            btn.disabled = true; // Disabled state if skipped
+        }
+        btn.textContent = opt;
+        btn.onclick = () => selectOption(idx);
+        UI.optionsGrid.appendChild(btn);
+    });
+
+    UI.prevBtn.disabled = State.currentQuestionIndex === 0;
+    UI.nextBtn.textContent = (State.currentQuestionIndex === State.questions.length - 1) ? 'Finish' : 'Next';
+    
+    // Next is enabled if they answered OR time ran out (answered as -1)
+    UI.nextBtn.disabled = State.answers[State.currentQuestionIndex] === null;
+}
+
+// Phase 4 Audio Context
+let audioCtx = null;
+function initAudio() {
+    if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+}
+function playSound(type) {
+    if(!audioCtx) return;
+    if(audioCtx.state === 'suspended') audioCtx.resume();
+    const osc = audioCtx.createOscillator();
+    const gainNode = audioCtx.createGain();
+    
+    osc.connect(gainNode);
+    gainNode.connect(audioCtx.destination);
+    
+    if (type === 'correct') {
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(440, audioCtx.currentTime); 
+        osc.frequency.exponentialRampToValueAtTime(880, audioCtx.currentTime + 0.1); 
+        gainNode.gain.setValueAtTime(0.5, audioCtx.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.3);
+    } else {
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(300, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(150, audioCtx.currentTime + 0.3);
+        gainNode.gain.setValueAtTime(0.5, audioCtx.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.3);
+    }
+}
+
+function selectOption(idx) {
+    if (State.answers[State.currentQuestionIndex] !== null) return; 
+    
+    initAudio(); // init audio context on first meaningful interaction
+    State.answers[State.currentQuestionIndex] = idx;
+    clearInterval(State.questionTimerInterval); 
+    
+    const q = State.questions[State.currentQuestionIndex];
+    if (idx === q.answer || idx === q.answer.toString()) {
+        playSound('correct');
+    } else {
+        playSound('wrong');
+    }
+    
+    renderQuestion(); 
+    
+    setTimeout(() => {
+        handleNext();
+    }, 1000);
+}
+
+function handlePrev() {
+    if (State.currentQuestionIndex > 0) {
+        State.currentQuestionIndex--;
+        renderQuestion();
+    }
+}
+
+function handleNext() {
+    if (State.currentQuestionIndex < State.questions.length - 1) {
+        State.currentQuestionIndex++;
+        renderQuestion();
+    } else {
+        showResults();
+    }
+}
+
+function showResults() {
+    clearInterval(State.questionTimerInterval);
+    clearInterval(State.totalTimeInterval);
+    
+    // Log play instance to Python backend tracker
+    logActivity();
+    
+    let score = 0;
+    State.questions.forEach((q, idx) => {
+        if (State.answers[idx] === q.answer) score++;
+    });
+    
+    // Points logic
+    let points = score * 100;
+    if(score > 0) points += Math.max(0, (State.questions.length * 15 - State.totalSeconds) * 2);
+
+    if (State.user) {
+        const lbData = JSON.parse(localStorage.getItem('squizz_leaderboard')) || [];
+        const existing = lbData.find(e => e.name === State.user);
+        if(existing) {
+            existing.points = (existing.points || 0) + points;
+            if(score > existing.score || (score === existing.score && State.totalSeconds < existing.time)) {
+                existing.score = score;
+                existing.time = State.totalSeconds;
+            }
+        } else {
+            lbData.push({ name: State.user, score: score, time: State.totalSeconds, points: points });
+        }
+        localStorage.setItem('squizz_leaderboard', JSON.stringify(lbData));
+    }
+
+    UI.finalScoreText.textContent = `${score}/${State.questions.length}`;
+    if(UI.accuracyText) {
+        UI.accuracyText.textContent = `${Math.round((score/State.questions.length)*100)}%`;
+    }
+    
+    // Format total time
+    let min = Math.floor(State.totalSeconds / 60);
+    let sec = State.totalSeconds % 60;
+    UI.totalTimeText.textContent = `${min < 10 ? '0'+min : min}:${sec < 10 ? '0'+sec : sec}`;
+    
+    if(score === State.questions.length) {
+         UI.resultMessage.textContent = "Perfect Score! You're a master 🏆";
+    } else if (score > State.questions.length / 2) {
+         UI.resultMessage.textContent = "Great job! Keep practicing 💡";
+    } else {
+         UI.resultMessage.textContent = "Good effort. Try again to improve! 📈";
+    }
+    
+    switchView('result');
+}
+
+function resetQuiz() {
+    State.currentCategory = null;
+    State.questions = [];
+    State.currentQuestionIndex = 0;
+    State.answers = [];
+    clearInterval(State.questionTimerInterval);
+    clearInterval(State.totalTimeInterval);
+}
+
+function showLeaderboard() {
+    switchView('leaderboard');
+    if(!UI.leaderboardContent) return;
+    
+    const lbData = JSON.parse(localStorage.getItem('squizz_leaderboard')) || [];
+    lbData.sort((a,b) => b.score - a.score || a.time - b.time);
+    
+    if(lbData.length === 0) {
+        UI.leaderboardContent.innerHTML = "<p class='text-center'>No rankings yet. Be the first!</p>";
+        return;
+    }
+    
+    let html = `<div class="lb-row lb-header"><span>Rank</span><span>Player</span><span>Score</span><span>Time</span></div>`;
+    lbData.slice(0, 10).forEach((entry, idx) => {
+        let badge = idx === 0 ? "🥇" : idx === 1 ? "🥈" : idx === 2 ? "🥉" : `${idx+1}`;
+        let level = entry.points > 1000 ? "Master 🌟" : entry.points > 500 ? "Expert 💎" : entry.points > 200 ? "Intermediate 🔥" : "Beginner";
+        let min = Math.floor(entry.time/60);
+        let sec = entry.time%60;
+        let tStr = `${min < 10 ? '0'+min : min}:${sec < 10 ? '0'+sec : sec}`;
+        
+        html += `<div class="lb-row">
+                    <span class="rank-badge">${badge}</span>
+                    <span class="lb-name">${entry.name} <small style="color:var(--primary); font-size:0.75rem;">${level} (${entry.points || 0} XP)</small></span>
+                    <span class="lb-score">${entry.score} pts</span>
+                    <span>${tStr}</span>
+                 </div>`;
+    });
+    UI.leaderboardContent.innerHTML = html;
+}
+
+// Phase 13 Feature Activation
+function showToast(msg) {
+    const t = document.getElementById('toast');
+    if(!t) return;
+    t.innerHTML = msg;
+    t.classList.add('show');
+    setTimeout(() => {
+        t.classList.remove('show');
+    }, 4000);
+}
+
+window.activateFeature = function(type) {
+    switch(type) {
+        case 'leaderboard':
+            if(!State.user) return switchView('login');
+            showLeaderboard();
+            break;
+        case 'streak':
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            const sc = document.getElementById('streakCardContainer');
+            if(sc) {
+                sc.style.transform = 'scale(1.1)';
+                sc.style.boxShadow = '0 0 30px #f97316';
+                setTimeout(() => {
+                    sc.style.transform = '';
+                    sc.style.boxShadow = '';
+                }, 1000);
+            }
+            break;
+        case 'voice':
+            State.voiceMode = !State.voiceMode;
+            showToast(State.voiceMode ? '🎙️ Voice Mode Activated!<br><small>Questions will be read aloud.</small>' : '🔇 Voice Mode Deactivated.');
+            break;
+        case 'multiplayer':
+            if(!State.user) {
+                showToast("Please Log In to play Multiplayer!");
+                return switchView('login');
+            }
+            const sel = document.getElementById('mpHostCategory');
+            if(sel && sel.options.length === 0) {
+                State.categories.forEach(c => {
+                    const opt = document.createElement('option');
+                    opt.value = c.id;
+                    opt.textContent = c.name;
+                    sel.appendChild(opt);
+                });
+            }
+            switchView('multiplayer');
+            break;
+        case 'ai':
+            const topic = prompt("Enter a topic for the AI to generate a quiz about:");
+            if(topic) {
+                showToast(`🤖 AI Generator Processing "${topic}"...`);
+                setTimeout(() => {
+                    State.searchQuery = topic;
+                    if(document.getElementById('topicSearchInput')) {
+                        document.getElementById('topicSearchInput').value = topic;
+                        document.getElementById('topicSearchInput').dispatchEvent(new Event('input'));
+                    }
+                    switchView('categories');
+                }, 1500);
+            }
+            break;
+        case 'smart':
+            if(!State.user) return switchView('login');
+            const hardQs = State.categories.flatMap(c => c.questions.filter(q => q.difficulty === 'hard'));
+            if(hardQs.length > 0) {
+                const mixedCategory = {
+                    name: "Smart Learning (Challenge)",
+                    icon: "🧠",
+                    timeLimit: 12,
+                    questions: hardQs.sort(() => Math.random() - 0.5).slice(0, 10)
+                };
+                startQuiz(mixedCategory);
+            }
+            break;
+    }
+}
+
+// Phase 14 Backend Multiplayer Sync Engine
+let socket = null;
+let mpRoomId = null;
+let mpIsHost = false;
+
+function initSocket() {
+    if(typeof io !== 'undefined') {
+        socket = io('http://127.0.0.1:8082');
+        
+        socket.on('error', (err) => showToast('❌ ' + err.msg));
+        
+        socket.on('room_created', (data) => {
+            mpRoomId = data.roomId;
+            mpIsHost = true;
+            document.getElementById('multiplayerSelection').style.display = 'none';
+            document.getElementById('multiplayerLobby').style.display = 'block';
+            document.getElementById('lobbyRoomCodeDisplay').textContent = data.roomId;
+            document.getElementById('btnStartGame').style.display = 'inline-flex';
+        });
+        
+        socket.on('player_joined', (data) => {
+            if(!mpRoomId) {
+                mpRoomId = document.getElementById('mpJoinCode').value.trim().toUpperCase();
+            }
+            document.getElementById('lobbyRoomCodeDisplay').textContent = mpRoomId;
+            document.getElementById('multiplayerSelection').style.display = 'none';
+            document.getElementById('multiplayerLobby').style.display = 'block';
+            
+            const list = document.getElementById('mpPlayerList');
+            if(list) {
+                list.innerHTML = '';
+                data.players.forEach(p => {
+                    const el = document.createElement('div');
+                    el.style.background = 'rgba(6, 182, 212, 0.1)';
+                    el.style.border = '1px solid rgba(6, 182, 212, 0.3)';
+                    el.style.padding = '0.8rem 1.2rem';
+                    el.style.borderRadius = '8px';
+                    el.style.color = '#fff';
+                    el.innerHTML = `👤 ${p.username} <span style="float:right; color:var(--primary);">${p.score}</span>`;
+                    list.appendChild(el);
+                });
+                document.getElementById('mpPlayerCount').textContent = data.players.length;
+            }
+        });
+        
+        socket.on('game_started', (data) => {
+            State.currentCategory = State.categories.find(c => c.id === data.categoryId) || State.categories[0];
+            switchView('quiz');
+            UI.questionText.innerHTML = "<h3>Syncing secure data from server...</h3>";
+            UI.optionsGrid.innerHTML = '';
+            if (UI.liveMultiplayerLeaderboard) {
+                UI.liveMultiplayerLeaderboard.style.display = 'block';
+            }
+        });
+        
+        socket.on('next_question', (data) => {
+            State.currentQuestionIndex = data.question.index;
+            State.questions = new Array(data.question.total).fill({});
+            State.questions[data.question.index] = data.question;
+            State.answers = new Array(data.question.total).fill(null);
+            
+            renderQuestion(); 
+            updateLiveLeaderboard(data.leaderboard);
+        });
+        
+        socket.on('update_leaderboard', (data) => {
+            updateLiveLeaderboard(data.leaderboard);
+        });
+
+        socket.on('round_ended', (data) => {
+            clearInterval(State.questionTimerInterval);
+            const buttons = document.querySelectorAll('.option-btn');
+            buttons.forEach((btn, idx) => {
+                btn.disabled = true;
+                if(idx === data.correctAnswer) {
+                    btn.style.background = 'rgba(34, 197, 94, 0.2)';
+                    btn.style.borderColor = '#22c55e';
+                }
+            });
+        });
+        
+        socket.on('game_over', (data) => {
+            if (UI.liveMultiplayerLeaderboard) {
+                UI.liveMultiplayerLeaderboard.style.display = 'none';
+            }
+            UI.resultMessage.innerHTML = `Multiplayer Match Finished!<br><h3 style="color:var(--primary); margin-top:0.5rem; text-shadow:0 0 10px rgba(6,182,212,0.5);">Winner: ${data.leaderboard[0].username} 👑</h3>`;
+            UI.finalScoreText.textContent = `${data.leaderboard[0].score} pts`;
+            UI.totalTimeText.textContent = 'Live Match';
+            UI.accuracyText.textContent = '--';
+            switchView('result');
+            mpRoomId = null;
+            mpIsHost = false;
+        });
+
+        const btnCreate = document.getElementById('btnCreateRoom');
+        const btnJoin = document.getElementById('btnJoinRoom');
+        const btnStart = document.getElementById('btnStartGame');
+        
+        if(btnCreate) {
+            btnCreate.addEventListener('click', () => {
+                const catId = document.getElementById('mpHostCategory').value;
+                socket.emit('create_room', {username: State.user, categoryId: catId});
+            });
+        }
+        if(btnJoin) {
+            btnJoin.addEventListener('click', () => {
+                const code = document.getElementById('mpJoinCode').value.trim();
+                if(code.length === 6) socket.emit('join_room', {username: State.user, roomId: code});
+            });
+        }
+        if(btnStart) {
+            btnStart.addEventListener('click', () => {
+                socket.emit('start_game', {roomId: mpRoomId});
+                btnStart.style.display = 'none';
+            });
+        }
+    }
+}
+
+function updateLiveLeaderboard(leaderboard) {
+    const list = UI.liveLBPillContainer;
+    if (!list) return;
+    list.innerHTML = '';
+    leaderboard.forEach((p, idx) => {
+        list.innerHTML += `<div style="display:flex; justify-content:space-between; padding:0.6rem 0.8rem; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.05); border-radius:8px; font-size:0.95rem;">
+            <span>${idx===0?'👑':''} ${p.username}</span>
+            <span style="color:var(--primary); font-weight:bold; text-shadow:var(--glow-cyan);">${p.score}</span>
+        </div>`;
+    });
+}
+
+// Intercept Phase 1 selectOption for secure Socket emit
+const oldSelectOption = selectOption;
+selectOption = function(idx) {
+    if(mpRoomId) {
+        if(State.answers[State.currentQuestionIndex] !== null) return; 
+        State.answers[State.currentQuestionIndex] = idx;
+        
+        const btn = document.querySelectorAll('.option-btn')[idx];
+        if(btn && idx !== -1) btn.classList.add('selected');
+        document.querySelectorAll('.option-btn').forEach(b => b.disabled = true);
+        
+        clearInterval(State.questionTimerInterval);
+        socket.emit('submit_answer', {
+            roomId: mpRoomId,
+            username: State.user,
+            answerIdx: idx,
+            timeLeft: State.questionTimeRemaining
+        });
+    } else {
+        oldSelectOption(idx);
+    }
+};
+
+const oldInit = init;
+init = function() {
+    oldInit();
+    initSocket();
+};
+
+document.addEventListener('DOMContentLoaded', init);

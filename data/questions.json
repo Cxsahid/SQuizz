@@ -1,0 +1,312 @@
+{
+  "categories": [
+    {
+      "id": "html",
+      "name": "HTML5 Basics",
+      "subject": "Frontend Languages",
+      "icon": "📝",
+      "tags": ["WebDev"],
+      "addedAt": "2023-01-01",
+      "difficultyValue": 1,
+      "timeLimit": 20,
+      "questions": [
+        {"q": "Which tag creates a hyperlink?", "options": ["<link>", "<a>", "<href>", "<hyper>"], "answer": 1, "difficulty": "easy"},
+        {"q": "What does HTML stand for?", "options": ["Hyper Text Markup Language", "Home Tool Markup Language", "Hyperlinks and Text Markup Language", "Hyper Tool Markup Language"], "answer": 0, "difficulty": "easy"},
+        {"q": "Which HTML5 element is used to specify a footer?", "options": ["<bottom>", "<footer>", "<section>", "<f>"], "answer": 1, "difficulty": "easy"},
+        {"q": "Which tag is used for the largest heading?", "options": ["<heading>", "<h6>", "<h1>", "<head>"], "answer": 2, "difficulty": "easy"},
+        {"q": "What is the correct HTML element for inserting a line break?", "options": ["<br>", "<lb>", "<break>", "<newline>"], "answer": 0, "difficulty": "easy"},
+        {"q": "How can you make a numbered list?", "options": ["<ul>", "<dl>", "<list>", "<ol>"], "answer": 3, "difficulty": "medium"},
+        {"q": "What is the correct HTML for making a checkbox?", "options": ["<input type=\"check\">", "<checkbox>", "<check>", "<input type=\"checkbox\">"], "answer": 3, "difficulty": "medium"},
+        {"q": "Which attribute specifies an alternate text for an image?", "options": ["title", "alt", "src", "longdesc"], "answer": 1, "difficulty": "medium"},
+        {"q": "Which HTML5 attribute specifies that an input field must be filled out?", "options": ["placeholder", "validate", "required", "formvalidate"], "answer": 2, "difficulty": "hard"},
+        {"q": "In HTML5, onblur and onfocus are:", "options": ["HTML elements", "Style attributes", "Event attributes", "Pseudo-classes"], "answer": 2, "difficulty": "hard"}
+      ]
+    },
+    {
+      "id": "css",
+      "name": "CSS3 Styling",
+      "subject": "Frontend Languages",
+      "icon": "🎨",
+      "tags": ["WebDev"],
+      "addedAt": "2023-02-15",
+      "difficultyValue": 1,
+      "timeLimit": 15,
+      "questions": [
+        {"q": "Which property changes text color?", "options": ["color", "text-color", "font-color", "fgcolor"], "answer": 0, "difficulty": "easy"},
+        {"q": "How do you select an element with id 'demo'?", "options": [".demo", "#demo", "*demo", "demo"], "answer": 1, "difficulty": "easy"},
+        {"q": "How do you select elements with class name 'test'?", "options": ["#test", "*test", ".test", "test"], "answer": 2, "difficulty": "easy"},
+        {"q": "What is the default value of the position property?", "options": ["relative", "absolute", "static", "fixed"], "answer": 2, "difficulty": "medium"},
+        {"q": "Which CSS property controls the text size?", "options": ["font-size", "text-size", "text-style", "font-weight"], "answer": 0, "difficulty": "medium"},
+        {"q": "How do you display hyperlinks without an underline?", "options": ["a {text-decoration:none;}", "a {underline:none;}", "a {decoration:no-underline;}", "a {text-decoration:no-underline;}"], "answer": 0, "difficulty": "medium"},
+        {"q": "Which property is used to change the left margin?", "options": ["padding-left", "margin-left", "indent", "spacing"], "answer": 1, "difficulty": "easy"},
+        {"q": "How do you make each word in a text start with a capital letter?", "options": ["text-style:capitalize;", "transform:capitalize;", "text-transform:capitalize;", "text-capitalize:all;"], "answer": 2, "difficulty": "hard"},
+        {"q": "What is the correct CSS syntax for making all the <p> elements bold?", "options": ["p {font-weight:bold;}", "p {text-size:bold;}", "p {font:bold;}", "p {text-weight:bold;}"], "answer": 0, "difficulty": "hard"},
+        {"q": "How do you add a shadow to elements in CSS3?", "options": ["shadow-color", "box-shadow", "shadow-right", "element-shadow"], "answer": 1, "difficulty": "hard"}
+      ]
+    },
+    {
+      "id": "javascript",
+      "name": "JavaScript Fundamentals",
+      "subject": "Frontend Languages",
+      "icon": "⚡",
+      "tags": ["JavaScript", "WebDev"],
+      "addedAt": "2023-03-10",
+      "difficultyValue": 3,
+      "timeLimit": 12,
+      "questions": [
+        {"q": "Inside which HTML element do we put JavaScript?", "options": ["<scripting>", "<js>", "<script>", "<javascript>"], "answer": 2, "difficulty": "easy"},
+        {"q": "Which keyword declares a variable?", "options": ["let", "var", "const", "All of the above"], "answer": 3, "difficulty": "easy"},
+        {"q": "How do you write 'Hello World' in an alert box?", "options": ["alertBox('Hello World');", "msgBox('Hello World');", "alert('Hello World');", "msg('Hello World');"], "answer": 2, "difficulty": "easy"},
+        {"q": "How do you create a function in JavaScript?", "options": ["function = myFunction()", "function myFunction()", "function:myFunction()", "def myFunction()"], "answer": 1, "difficulty": "medium"},
+        {"q": "How do you call a function named 'myFunction'?", "options": ["call myFunction()", "call function myFunction()", "myFunction()", "trigger myFunction()"], "answer": 2, "difficulty": "medium"},
+        {"q": "How to write an IF statement in JavaScript?", "options": ["if i = 5 then", "if (i == 5)", "if i == 5 then", "if i = 5"], "answer": 1, "difficulty": "medium"},
+        {"q": "How does a WHILE loop start?", "options": ["while (i <= 10)", "while i = 1 to 10", "while (i <= 10; i++)", "while (i=0 to 10)"], "answer": 0, "difficulty": "easy"},
+        {"q": "What does `typeof null` return?", "options": ["null", "undefined", "object", "string"], "answer": 2, "difficulty": "hard"},
+        {"q": "What is the output of `[] == ![]`?", "options": ["true", "false", "TypeError", "undefined"], "answer": 0, "difficulty": "hard"},
+        {"q": "Which method stops event propagation?", "options": ["stopPropagation()", "preventDefault()", "stopEvent()", "halt()"], "answer": 0, "difficulty": "hard"}
+      ]
+    },
+    {
+      "id": "python",
+      "name": "Python Mastery",
+      "subject": "Backend Languages",
+      "icon": "🐍",
+      "tags": ["DataScience"],
+      "addedAt": "2023-04-05",
+      "difficultyValue": 2,
+      "timeLimit": 15,
+      "questions": [
+        {"q": "How do you define a function in Python?", "options": ["def", "function", "fun", "func"], "answer": 0, "difficulty": "easy"},
+        {"q": "Which of these is NOT a Python data type?", "options": ["list", "dictionary", "array", "set"], "answer": 2, "difficulty": "easy"},
+        {"q": "How do you insert COMMENTS in Python code?", "options": ["//", "/*", "#", "--"], "answer": 2, "difficulty": "easy"},
+        {"q": "Which method can be used to return a string in upper case?", "options": ["upper()", "uppercase()", "toUpperCase()", "to_upper()"], "answer": 0, "difficulty": "medium"},
+        {"q": "Which method can be used to remove any whitespace from both the beginning and the end of a string?", "options": ["strip()", "trim()", "len()", "ptrim()"], "answer": 0, "difficulty": "medium"},
+        {"q": "Which method can be used to return the length of a string?", "options": ["len()", "length()", "size()", "count()"], "answer": 0, "difficulty": "medium"},
+        {"q": "How do you create a variable with the numeric value 5?", "options": ["x = int(5)", "x = 5", "Both are correct", "int x = 5"], "answer": 2, "difficulty": "easy"},
+        {"q": "Which data type is immutable?", "options": ["list", "dictionary", "set", "tuple"], "answer": 3, "difficulty": "hard"},
+        {"q": "What does the `yield` keyword do?", "options": ["Stops execution", "Creates a generator", "Throws an error", "Returns a boolean"], "answer": 1, "difficulty": "hard"},
+        {"q": "What is the correct syntax to output the type of a variable or object in Python?", "options": ["print(typeOf(x))", "print(typeof(x))", "print(type(x))", "print(x.type)"], "answer": 2, "difficulty": "hard"}
+      ]
+    },
+    {
+      "id": "nodejs",
+      "name": "Node.js Architecture",
+      "subject": "Backend Languages",
+      "icon": "🟢",
+      "tags": ["JavaScript", "WebDev"],
+      "addedAt": "2023-05-20",
+      "difficultyValue": 3,
+      "timeLimit": 12,
+      "questions": [
+        {"q": "Node.js is written in which language?", "options": ["Java", "JavaScript", "C++", "Both C++ and JavaScript"], "answer": 3, "difficulty": "easy"},
+        {"q": "What does npm stand for?", "options": ["Node Package Manager", "New Project Manager", "Node Process Manager", "Next Protocol Module"], "answer": 0, "difficulty": "easy"},
+        {"q": "Node.js runs on which engine?", "options": ["SpiderMonkey", "V8", "Chakra", "WebKit"], "answer": 1, "difficulty": "easy"},
+        {"q": "Which module creates a web server?", "options": ["http", "url", "fs", "path"], "answer": 0, "difficulty": "medium"},
+        {"q": "How do you include a built-in module in Node.js?", "options": ["require()", "import()", "include()", "load()"], "answer": 0, "difficulty": "medium"},
+        {"q": "Which object contains global Node.js variables?", "options": ["window", "global", "document", "process"], "answer": 1, "difficulty": "medium"},
+        {"q": "What is a callback?", "options": ["A server response", "A function passed as an argument", "An error type", "A database query"], "answer": 1, "difficulty": "easy"},
+        {"q": "What is the default scope in a Node.js file?", "options": ["Global", "Local (module)", "Block", "Lexical"], "answer": 1, "difficulty": "hard"},
+        {"q": "How does Node.js handle concurrency?", "options": ["Multi-threading", "Event Loop", "Child processes natively", "It cannot"], "answer": 1, "difficulty": "hard"},
+        {"q": "Which command halts an active Node process?", "options": ["process.exit()", "stop()", "exit()", "process.halt()"], "answer": 0, "difficulty": "hard"}
+      ]
+    },
+    {
+      "id": "php",
+      "name": "PHP Backend Core",
+      "subject": "Backend Languages",
+      "icon": "🐘",
+      "tags": ["WebDev"],
+      "addedAt": "2023-06-15",
+      "difficultyValue": 2,
+      "timeLimit": 15,
+      "questions": [
+        {"q": "What does PHP stand for?", "options": ["Personal Home Page", "Private HTML Pages", "PHP: Hypertext Preprocessor", "Programming Hypertext"], "answer": 2, "difficulty": "easy"},
+        {"q": "PHP server scripts are surrounded by delimiters, which?", "options": ["<?php ... ?>", "<script>...</script>", "<&>...</&>", "<?php>...</?>"], "answer": 0, "difficulty": "easy"},
+        {"q": "How do you write 'Hello World' in PHP?", "options": ["Document.Write('Hello World');", "echo 'Hello World';", "\"Hello World\";", "print_f('Hello World');"], "answer": 1, "difficulty": "easy"},
+        {"q": "Which symbol begins a PHP variable?", "options": ["@", "!", "#", "$"], "answer": 3, "difficulty": "medium"},
+        {"q": "What is the correct way to end a PHP statement?", "options": ["</php>", ".", ";", "New line"], "answer": 2, "difficulty": "medium"},
+        {"q": "How do you get information from a form that is submitted using the 'get' method?", "options": ["$_GET[];", "$GET[];", "Request.QueryString;", "Request.Form;"], "answer": 0, "difficulty": "medium"},
+        {"q": "When using the POST method, variables are displayed in the URL.", "options": ["True", "False", "Sometimes", "Depends on browser"], "answer": 1, "difficulty": "easy"},
+        {"q": "How do you include a file?", "options": ["include()", "require()", "Both", "import()"], "answer": 2, "difficulty": "hard"},
+        {"q": "Which superglobal variable holds information about headers, paths, and script locations?", "options": ["$_SERVER", "$_SESSION", "$_GLOBALS", "$_ENV"], "answer": 0, "difficulty": "hard"},
+        {"q": "What is PDO in PHP?", "options": ["PHP Data Object", "PHP Database Option", "Process Data Output", "Personal Document Object"], "answer": 0, "difficulty": "hard"}
+      ]
+    },
+    {
+      "id": "ruby",
+      "name": "Ruby on Rails Basics",
+      "subject": "Backend Languages",
+      "icon": "💎",
+      "tags": ["WebDev"],
+      "addedAt": "2023-07-25",
+      "difficultyValue": 2,
+      "timeLimit": 15,
+      "questions": [
+        {"q": "Who created Ruby?", "options": ["Guido van Rossum", "Yukihiro Matsumoto", "Brendan Eich", "James Gosling"], "answer": 1, "difficulty": "easy"},
+        {"q": "What is Rails?", "options": ["A train system", "A programming language", "A web-application framework", "A database engine"], "answer": 2, "difficulty": "easy"},
+        {"q": "How do you print 'Hello' in Ruby?", "options": ["echo 'Hello'", "puts 'Hello'", "console.log('Hello')", "print_r('Hello')"], "answer": 1, "difficulty": "easy"},
+        {"q": "Which keyword defines a class?", "options": ["module", "def", "class", "struct"], "answer": 2, "difficulty": "medium"},
+        {"q": "How are single-line comments denoted?", "options": ["//", "/*", "#", "--"], "answer": 2, "difficulty": "medium"},
+        {"q": "What architecture pattern does Rails use?", "options": ["MVC", "MVVM", "Flux", "Singleton"], "answer": 0, "difficulty": "medium"},
+        {"q": "What does IRB stand for?", "options": ["Interactive Ruby", "Internet Ruby Base", "Internal Ruby Bind", "Integrated Ruby"], "answer": 0, "difficulty": "easy"},
+        {"q": "What is a 'gem' in Ruby?", "options": ["A database", "A syntax error", "A library or package", "A data type"], "answer": 2, "difficulty": "hard"},
+        {"q": "Which command starts a Rails server locally?", "options": ["rails boot", "ruby server", "rails start", "rails server"], "answer": 3, "difficulty": "hard"},
+        {"q": "In Ruby, everything is an:", "options": ["array", "object", "integer", "string"], "answer": 1, "difficulty": "hard"}
+      ]
+    },
+    {
+      "id": "json",
+      "name": "JSON Structures",
+      "subject": "Database",
+      "icon": "📝",
+      "tags": ["Database", "WebDev"],
+      "addedAt": "2023-08-01",
+      "difficultyValue": 1,
+      "timeLimit": 12,
+      "questions": [
+        {"q": "What does JSON stand for?", "options": ["JavaScript Object Notation", "Java Syntax Open Network", "JavaScript Output Node", "Java Source Oriented Notation"], "answer": 0, "difficulty": "easy"},
+        {"q": "Is JSON language independent?", "options": ["Yes", "No", "Only for JS", "Only for Python"], "answer": 0, "difficulty": "easy"},
+        {"q": "Which of these is a valid JSON value type?", "options": ["Function", "Date", "Boolean", "Undefined"], "answer": 2, "difficulty": "medium"},
+        {"q": "JSON objects are written inside:", "options": ["Square brackets", "Curly braces", "Parentheses", "Quotes"], "answer": 1, "difficulty": "easy"},
+        {"q": "JSON arrays are written inside:", "options": ["Curly braces", "Square brackets", "Angle brackets", "Parentheses"], "answer": 1, "difficulty": "easy"},
+        {"q": "Which function converts a JavaScript object into a JSON string?", "options": ["JSON.stringify()", "JSON.parse()", "JSON.toString()", "JSON.convert()"], "answer": 0, "difficulty": "medium"},
+        {"q": "Which function parses a JSON string into an object?", "options": ["JSON.stringify()", "JSON.parse()", "JSON.object()", "JSON.eval()"], "answer": 1, "difficulty": "medium"},
+        {"q": "How does JSON represent an array?", "options": ["{ }", "[ ]", "( )", "< >"], "answer": 1, "difficulty": "hard"},
+        {"q": "Can a JSON payload inherently transport executable functions?", "options": ["Yes natively", "No", "Only if compressed", "Yes, with JSON.func()"], "answer": 1, "difficulty": "hard"},
+        {"q": "What is the standard MIME type for JSON data?", "options": ["text/json", "application/javascript", "application/json", "text/javascript"], "answer": 2, "difficulty": "hard"}
+      ]
+    },
+    {
+      "id": "sqlite",
+      "name": "SQLite Core",
+      "subject": "Database",
+      "icon": "🗄️",
+      "tags": ["Database"],
+      "addedAt": "2023-08-10",
+      "difficultyValue": 2,
+      "timeLimit": 15,
+      "questions": [
+        {"q": "Where does SQLite store its databases?", "options": ["On a remote cloud server", "In a local file", "Only in memory", "In a MySQL engine"], "answer": 1, "difficulty": "easy"},
+        {"q": "What language is used to query SQLite?", "options": ["Python", "JavaScript", "SQL", "C++"], "answer": 2, "difficulty": "easy"},
+        {"q": "SQLite relies on a background service daemon to run.", "options": ["True", "False, it is serverless", "Only on Windows", "Only on Linux"], "answer": 1, "difficulty": "easy"},
+        {"q": "Does SQLite support concurrent writes?", "options": ["Yes, infinitely", "No, it locks the whole file", "Yes, row-level only", "It does not support writes at all"], "answer": 1, "difficulty": "medium"},
+        {"q": "Which command creates a new table?", "options": ["MAKE TABLE", "CREATE TABLE", "NEW TABLE", "BUILD TABLE"], "answer": 1, "difficulty": "medium"},
+        {"q": "Which command removes a table?", "options": ["DELETE", "TRUNCATE", "DROP", "REMOVE"], "answer": 2, "difficulty": "medium"},
+        {"q": "Which SQL clause is used to filter records?", "options": ["WHERE", "FILTER", "MATCH", "HAVING"], "answer": 0, "difficulty": "easy"},
+        {"q": "Which data type is NOT fundamentally supported natively by SQLite3?", "options": ["INTEGER", "TEXT", "BLOB", "DATETIME"], "answer": 3, "difficulty": "hard"},
+        {"q": "What is the storage class of a NULL value in SQLite?", "options": ["NULL", "TEXT", "NONE", "BLOB"], "answer": 0, "difficulty": "hard"},
+        {"q": "What PRAGMA syntax reveals table architecture?", "options": ["PRAGMA info", "PRAGMA table_info()", "PRAGMA schema", "PRAGMA tables"], "answer": 1, "difficulty": "hard"}
+      ]
+    },
+    {
+      "id": "mysql",
+      "name": "MySQL Relational Analytics",
+      "subject": "Database",
+      "icon": "🐬",
+      "tags": ["Database"],
+      "addedAt": "2023-08-15",
+      "difficultyValue": 3,
+      "timeLimit": 15,
+      "questions": [
+        {"q": "What language does MySQL use?", "options": ["C++", "Python", "SQL", "JavaScript"], "answer": 2, "difficulty": "easy"},
+        {"q": "What does SQL stand for?", "options": ["Structured Query Language", "Strong Question Language", "Structured Question Language", "System Query Language"], "answer": 0, "difficulty": "easy"},
+        {"q": "Which port does MySQL default to?", "options": ["80", "1433", "3306", "5432"], "answer": 2, "difficulty": "easy"},
+        {"q": "Which command extracts data from a table?", "options": ["PULL", "GET", "SELECT", "FETCH"], "answer": 2, "difficulty": "medium"},
+        {"q": "How to update records in a table?", "options": ["MODIFY", "SAVE", "UPDATE", "CHANGE"], "answer": 2, "difficulty": "medium"},
+        {"q": "Which clause sorts the result-set?", "options": ["SORT BY", "ORDER BY", "ORDER", "ARRANGE BY"], "answer": 1, "difficulty": "medium"},
+        {"q": "Which operator is used to search for a specified pattern?", "options": ["LIKE", "GET", "MATCH", "SEEK"], "answer": 0, "difficulty": "easy"},
+        {"q": "Which JOIN returns all rows when there is a match in one of the tables?", "options": ["INNER JOIN", "FULL OUTER JOIN", "LEFT JOIN", "RIGHT JOIN"], "answer": 1, "difficulty": "hard"},
+        {"q": "What is a primary key?", "options": ["A key given to admin", "A unique identifier for a row", "A password", "An index"], "answer": 1, "difficulty": "hard"},
+        {"q": "What command undoes a transaction?", "options": ["UNDO", "REVERT", "ROLLBACK", "BACK"], "answer": 2, "difficulty": "hard"}
+      ]
+    },
+    {
+      "id": "machine_learning",
+      "name": "Machine Learning Modules",
+      "subject": "Data Science",
+      "icon": "🧠",
+      "tags": ["DataScience"],
+      "addedAt": "2023-09-01",
+      "difficultyValue": 3,
+      "timeLimit": 20,
+      "questions": [
+        {"q": "What is Supervised Learning?", "options": ["Training with labeled data", "Training without labels", "Reinforcement learning", "Clustering"], "answer": 0, "difficulty": "easy"},
+        {"q": "What does ML stand for?", "options": ["Multi Level", "Machine Learning", "Max Learning", "Micro Logic"], "answer": 1, "difficulty": "easy"},
+        {"q": "Which is an example of Unsupervised Learning?", "options": ["Regression", "Classification", "Clustering", "SVM"], "answer": 2, "difficulty": "easy"},
+        {"q": "Which algorithm is used for Classification?", "options": ["Linear Regression", "Logistic Regression", "K-Means", "PCA"], "answer": 1, "difficulty": "medium"},
+        {"q": "What is an Epoch?", "options": ["A mistake", "One complete pass through the training data", "A layer in a network", "The output"], "answer": 1, "difficulty": "medium"},
+        {"q": "What is the function of an activation layer?", "options": ["Introduces non-linearity", "Adds bias", "Removes data", "Scales the image"], "answer": 0, "difficulty": "medium"},
+        {"q": "What is a basic feedforward network called?", "options": ["RNN", "CNN", "MLP", "GAN"], "answer": 2, "difficulty": "easy"},
+        {"q": "What prevents overfitting?", "options": ["More parameters", "Adding noise", "Cross-validation", "Lower learning rate"], "answer": 2, "difficulty": "hard"},
+        {"q": "Which optimization algorithm is heavily used in Deep Learning?", "options": ["A*", "Dijkstra", "Stochastic Gradient Descent", "Binary Search"], "answer": 2, "difficulty": "hard"},
+        {"q": "What is the vanishing gradient problem?", "options": ["Gradients grow infinitely", "Gradients shrink toward zero stopping training", "Data is lost", "CPU overheating"], "answer": 1, "difficulty": "hard"}
+      ]
+    },
+    {
+      "id": "pandas",
+      "name": "Pandas DataFrames",
+      "subject": "Data Science",
+      "icon": "🐼",
+      "tags": ["DataScience", "Python"],
+      "addedAt": "2023-09-05",
+      "difficultyValue": 2,
+      "timeLimit": 15,
+      "questions": [
+        {"q": "What does read_csv do?", "options": ["Deletes a file", "Reads comma-separated values", "Exports to JSON", "Creates a chart"], "answer": 1, "difficulty": "easy"},
+        {"q": "What does Pandas mainly provide?", "options": ["Games", "Web servers", "Data analysis structures", "Machine learning kernels"], "answer": 2, "difficulty": "easy"},
+        {"q": "Pandas is built on top of which library?", "options": ["Tensorflow", "Scikit", "NumPy", "Matplotlib"], "answer": 2, "difficulty": "easy"},
+        {"q": "What is the 1D data structure in Pandas?", "options": ["Matrix", "List", "Series", "DataFrame"], "answer": 2, "difficulty": "medium"},
+        {"q": "What is the 2D data structure in Pandas?", "options": ["DataFrame", "Graph", "Tuple", "Dict"], "answer": 0, "difficulty": "medium"},
+        {"q": "How do you view the first 5 rows of a DataFrame?", "options": ["df.top()", "df.head()", "df.first()", "df.peak()"], "answer": 1, "difficulty": "medium"},
+        {"q": "How to get basic statistical details of a DataFrame?", "options": ["df.stats()", "df.describe()", "df.info()", "df.math()"], "answer": 1, "difficulty": "easy"},
+        {"q": "Which method drops missing values?", "options": ["remove_na()", "dropna()", "fillna()", "clean()"], "answer": 1, "difficulty": "hard"},
+        {"q": "How to fill missing values?", "options": ["fillna()", "replace()", "insert()", "pad()"], "answer": 0, "difficulty": "hard"},
+        {"q": "Which function groups data together?", "options": ["combine()", "merge()", "groupby()", "join()"], "answer": 2, "difficulty": "hard"}
+      ]
+    },
+    {
+      "id": "react",
+      "name": "React.js Architecture",
+      "subject": "Web Development",
+      "icon": "⚛️",
+      "tags": ["WebDev", "JavaScript"],
+      "addedAt": "2023-09-10",
+      "difficultyValue": 2,
+      "timeLimit": 15,
+      "questions": [
+        {"q": "What is React?", "options": ["A backend database", "A JavaScript library for building UIs", "A CSS framework", "A Python package"], "answer": 1, "difficulty": "easy"},
+        {"q": "Who maintains React?", "options": ["Google", "Amazon", "Twitter", "Meta/Facebook"], "answer": 3, "difficulty": "easy"},
+        {"q": "React components render what syntax?", "options": ["HTML", "XML", "JSX", "JS"], "answer": 2, "difficulty": "easy"},
+        {"q": "Which Hook manages local state?", "options": ["useEffect", "useRef", "useState", "useContext"], "answer": 2, "difficulty": "medium"},
+        {"q": "Which Hook causes side effects in function components?", "options": ["useEffect", "useEvents", "useSide", "useAction"], "answer": 0, "difficulty": "medium"},
+        {"q": "How do you pass data to child components?", "options": ["Events", "State", "Hooks", "Props"], "answer": 3, "difficulty": "medium"},
+        {"q": "Which keyword defines an immutable prop?", "options": ["They are inherently immutable", "const", "static", "readonly"], "answer": 0, "difficulty": "easy"},
+        {"q": "What is the virtual DOM?", "options": ["A physical browser tree", "A lightweight memory representation of the actual DOM", "A database graph", "A node server"], "answer": 1, "difficulty": "hard"},
+        {"q": "Instead of class attributes, JSX uses what?", "options": ["classes", "className", "class-name", "cssClass"], "answer": 1, "difficulty": "hard"},
+        {"q": "React applications are fundamentally:", "options": ["Bi-directional data flows", "Uni-directional data flows", "Multi-threaded", "Stateless"], "answer": 1, "difficulty": "hard"}
+      ]
+    },
+    {
+      "id": "api",
+      "name": "RESTful APIs",
+      "subject": "Web Development",
+      "icon": "🌐",
+      "tags": ["WebDev", "Backend"],
+      "addedAt": "2023-09-15",
+      "difficultyValue": 2,
+      "timeLimit": 15,
+      "questions": [
+        {"q": "What does API stand for?", "options": ["Advanced Program Interface", "Application Programming Interface", "Automated Python Integration", "Anonymous Protocol Index"], "answer": 1, "difficulty": "easy"},
+        {"q": "What does REST stand for?", "options": ["Representational State Transfer", "Real State Text", "Random Event System Transfer", "Request State Tool"], "answer": 0, "difficulty": "easy"},
+        {"q": "Which method retrieves data?", "options": ["POST", "PUT", "GET", "DELETE"], "answer": 2, "difficulty": "easy"},
+        {"q": "Which HTTP method updates data completely?", "options": ["POST", "PATCH", "PUT", "GET"], "answer": 2, "difficulty": "medium"},
+        {"q": "Which HTTP method creates a new resource?", "options": ["CREATE", "ADD", "POST", "UPDATE"], "answer": 2, "difficulty": "medium"},
+        {"q": "What is a 200 HTTP status?", "options": ["Not Found", "OK", "Server Error", "Forbidden"], "answer": 1, "difficulty": "medium"},
+        {"q": "What is CRUD?", "options": ["Create Read Update Delete", "Code Root Unify Drive", "C++ Rust Unity Delphi", "Control Rate Up Down"], "answer": 0, "difficulty": "easy"},
+        {"q": "What status code is 'Not Found'?", "options": ["200", "403", "404", "500"], "answer": 2, "difficulty": "hard"},
+        {"q": "Which format is mostly used to transmit REST data?", "options": ["XML", "JSON", "CSV", "YAML"], "answer": 1, "difficulty": "hard"},
+        {"q": "What defines an idempotent API request?", "options": ["It is encrypted", "It cannot be repeated", "Repeating it yields the same system state as making it once", "It runs synchronously"], "answer": 2, "difficulty": "hard"}
+      ]
+    }
+  ]
+}
