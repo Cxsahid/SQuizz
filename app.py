@@ -407,6 +407,46 @@ def update_avatar():
     conn.close()
     return jsonify({'success': True, 'avatar_url': f"/uploads/{avatar_filename}"})
 
+@app.route('/api/quiz/trending', methods=['GET'])
+def get_trending_quizzes():
+    trending = [
+        {"id": "js_advanced", "title": "Advanced JavaScript", "description": "Master closures, promises, and the event loop.", "level": 7, "difficulty": "Hard", "totalQuestions": 20},
+        {"id": "python_basics", "title": "Python Basics", "description": "Strengthen your core foundation in Python data structures.", "level": 3, "difficulty": "Medium", "totalQuestions": 15},
+        {"id": "react_hooks", "title": "React Architecture", "description": "Deep dive into component lifecycle and advanced states.", "level": 6, "difficulty": "Hard", "totalQuestions": 18}
+    ]
+    return jsonify(trending)
+
+@app.route('/api/user/progress/<username>', methods=['GET'])
+def get_all_user_progress(username):
+    conn = get_db_connection()
+    results = conn.execute('''
+        SELECT quiz_name, MAX(score) as max_score, MAX(total_questions) as tot_q, SUM(time_spent) as tot_t, COUNT(id) as attempts
+        FROM quiz_results
+        WHERE username = ?
+        GROUP BY quiz_name
+    ''', (username,)).fetchall()
+    conn.close()
+
+    progress_map = {}
+    for r in results:
+        tot_q = r['tot_q']
+        if tot_q > 0:
+            percentage = int((r['max_score'] / tot_q) * 100)
+            accuracy = int((r['max_score'] / tot_q) * 100)
+        else:
+            percentage = 0
+            accuracy = 0
+        avg_time = int(r['tot_t'] / r['attempts']) if r['attempts'] > 0 else 0
+        
+        progress_map[r['quiz_name']] = {
+            "completedQuestions": r['max_score'],
+            "percentage": percentage,
+            "accuracy": accuracy,
+            "avgTime": f"{avg_time}s",
+            "xp": r['max_score'] * 100
+        }
+    return jsonify(progress_map)
+
 # --- PHASE 14 MULTIPLAYER SOCKETS ---
 
 def generate_room_code():
