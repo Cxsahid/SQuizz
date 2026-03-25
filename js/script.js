@@ -419,7 +419,12 @@ function renderPerformanceChart(history) {
         const timeStr = dateObj.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
         const dateStr = dateObj.toLocaleDateString(undefined, {month: 'short', day: 'numeric'});
         
-        return { x, y, score, name: history[index].quiz_name, datetime: `${dateStr} @ ${timeStr}` };
+        let diff = 0;
+        if (index > 0) {
+            diff = score - scores[index-1];
+        }
+        
+        return { x, y, score, name: history[index].quiz_name, dateStr, timeStr, datetime: `${dateStr} @ ${timeStr}`, diff, isFirst: index === 0 };
     });
 
     pathD += ` L ${pointsData[pointsData.length-1].x} ${height} Z`;
@@ -434,17 +439,32 @@ function renderPerformanceChart(history) {
             </defs>
             <path class="chart-area" d="${pathD}" />
             <path class="chart-line" d="${lineD}" />
-            ${pointsData.map((p) => `
+            ${pointsData.map((p) => {
+                let trendText = '';
+                let trendColor = 'var(--text-secondary)';
+                if (!p.isFirst) {
+                    if (p.diff > 0) { trendText = '▲ +' + p.diff.toFixed(0) + '%'; trendColor = '#22c55e'; }
+                    else if (p.diff < 0) { trendText = '▼ ' + p.diff.toFixed(0) + '%'; trendColor = '#ef4444'; }
+                    else { trendText = '➖ 0%'; }
+                } else {
+                    trendText = '🚀 Start';
+                }
+
+                return `
+                <text x="${p.x}" y="${p.y - 20}" fill="${trendColor}" font-size="13" font-weight="bold" text-anchor="middle" style="pointer-events:none; text-shadow: 0 0 5px rgba(0,0,0,0.8);">${trendText}</text>
+                <text x="${p.x}" y="${height - 25}" fill="var(--text-secondary)" font-size="11" text-anchor="middle" font-family="monospace" style="pointer-events:none;">${p.dateStr}</text>
+                <text x="${p.x}" y="${height - 10}" fill="var(--text-secondary)" font-size="9" text-anchor="middle" opacity="0.6" style="pointer-events:none;">${p.timeStr}</text>
+
                 <g class="chart-point" transform="translate(${p.x},${p.y})" style="cursor:pointer;">
                     <circle r="6" fill="var(--bg-dark)" stroke="var(--primary)" stroke-width="2" class="chart-circle" style="transition:all 0.2s;" onmouseover="this.setAttribute('r', '9'); this.setAttribute('fill', 'var(--primary)')" onmouseout="this.setAttribute('r', '6'); this.setAttribute('fill', 'var(--bg-dark)')" />
-                    <foreignObject x="-95" y="-60" width="190" height="60" style="overflow:visible; z-index: 100;">
+                    <foreignObject x="-95" y="-80" width="190" height="60" style="overflow:visible; z-index: 100;">
                         <div class="tooltip" style="position:static; transform:none; opacity:0; margin:0 auto; width:max-content; pointer-events:none; padding:0.5rem 0.8rem; text-align:center; background:rgba(2,6,23,0.9); border:1px solid var(--primary); border-radius:6px; box-shadow:0 5px 15px rgba(0,0,0,0.5), inset 0 0 10px rgba(6,182,212,0.2);">
                             <span style="font-weight:bold; color:var(--text-primary);">${p.score.toFixed(0)}%</span> <span style="color:var(--text-secondary);">on ${p.name}</span><br>
                             <span style="color:var(--primary); font-size: 0.70rem; font-family:monospace; letter-spacing:1px;">🗓️ ${p.datetime}</span>
                         </div>
                     </foreignObject>
                 </g>
-            `).join('')}
+            `}).join('')}
         </svg>
     `;
 
