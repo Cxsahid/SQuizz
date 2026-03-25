@@ -95,9 +95,45 @@ a { text-decoration: none; color: inherit; transition: color var(--transition-fa
     text-shadow: 0 0 10px rgba(255,255,255,0.2);
 }
 
+.user-badge-text {
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.nav-avatar-small {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: 1.5px solid var(--primary);
+    overflow: hidden;
+    box-shadow: 0 0 10px rgba(6, 182, 212, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg-dark);
+}
+
+.nav-avatar-small img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.nav-user-info:hover .nav-avatar-small {
+    border-color: #fff;
+    box-shadow: var(--glow-cyan-strong);
+    transform: scale(1.05);
+}
+
+.nav-user-info {
+    transition: transform var(--transition-fast);
+}
+
 .accent {
     color: var(--primary);
     text-shadow: var(--glow-cyan);
+}
+
 }
 
 .nav-links { display: flex; gap: 2rem; }

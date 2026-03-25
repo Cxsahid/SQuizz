@@ -17,7 +17,8 @@ const State = {
     // Phase 7 Filters
     currentTag: 'all',
     currentSort: 'popular',
-    searchQuery: ''
+    searchQuery: '',
+    avatarUrl: null
 };
 
 const UI = {
@@ -144,10 +145,46 @@ function renderLoggedOutNav() {
 
 function updateNavUser() {
     if (State.user && UI.userNavDisplay) {
-        UI.userNavDisplay.innerHTML = `<span class="user-badge" id="userBadge" style="margin-right: 15px; cursor: pointer;">👾 ${State.user}</span> <button class="btn btn-outline" style="padding: 0.3rem 0.8rem; font-size: 0.8rem;" id="logoutBtn">Logout</button>`;
-        // NEW API Hook to check Daily Streak
-        fetchUserStreak();
+        const u = State.user;
+        const fallback = `https://api.dicebear.com/7.x/bottts/svg?seed=${u}&backgroundColor=020617&baseColor=06b6d4`;
+        
+        // If avatar isn't in state, fetch it from profile API
+        if(!State.avatarUrl) {
+            fetch(`/api/profile/${u}`)
+                .then(r => r.json())
+                .then(data => {
+                    State.avatarUrl = data.avatar_url || fallback;
+                    updateNavUser(); // Re-render with image
+                });
+        }
 
+        const avatarSrc = State.avatarUrl || fallback;
+
+        UI.userNavDisplay.innerHTML = `
+            <div class="nav-user-info" id="userBadge" style="display:flex; align-items:center; gap:0.8rem; cursor:pointer;">
+                <div class="nav-avatar-small">
+                    <img src="${avatarSrc}" alt="Nav Avatar" id="navAvatarImg">
+                </div>
+                <span class="user-badge-text">👾 ${u}</span>
+            </div>
+            <button class="btn btn-outline" style="padding: 0.3rem 0.8rem; font-size: 0.8rem; margin-left: 1rem;" id="logoutBtn">Logout</button>
+        `;
+        
+        const badge = document.getElementById('userBadge');
+        if(badge) badge.onclick = () => switchView('profile');
+
+        const logout = document.getElementById('logoutBtn');
+        if(logout) logout.onclick = () => {
+            localStorage.removeItem('squizz_active_user');
+            State.user = null;
+            State.avatarUrl = null;
+            renderLoggedOutNav();
+            switchView('hero');
+        };
+        
+        fetchUserStreak();
+    }
+}
         document.getElementById('logoutBtn').addEventListener('click', () => {
             localStorage.removeItem('squizz_active_user');
             State.user = null;
