@@ -233,7 +233,8 @@ def register_user():
     return jsonify({
         'success': True,
         'username': username,
-        'email': email
+        'email': email,
+        'avatar_url': None
     })
 
 @app.route('/api/login', methods=['POST'])
@@ -254,7 +255,8 @@ def login_user():
 
     # Verify cryptographic hash of the password
     if user and check_password_hash(user['password'], password):
-        return jsonify({'success': True, 'username': user['username']})
+        avatar_url = f"/uploads/{user['avatar_path']}" if user['avatar_path'] else None
+        return jsonify({'success': True, 'username': user['username'], 'avatar_url': avatar_url})
     else:
         return jsonify({'error': 'Invalid credentials. Please try again.'}), 401
 
