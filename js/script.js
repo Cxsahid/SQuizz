@@ -29,7 +29,8 @@ const UI = {
         categories: document.getElementById('view-categories'),
         quiz: document.getElementById('view-quiz'),
         result: document.getElementById('view-result'),
-        leaderboard: document.getElementById('view-leaderboard')
+        leaderboard: document.getElementById('view-leaderboard'),
+        profile: document.getElementById('view-profile')
     },
     userNavDisplay: document.getElementById('userNavDisplay'),
     usernameInput: document.getElementById('usernameInput'),
@@ -65,7 +66,8 @@ const UI = {
     totalTimeText: document.getElementById('totalTimeText'),
     accuracyText: document.getElementById('accuracyText'),
     resultMessage: document.getElementById('resultMessage'),
-    homeBtn: document.getElementById('homeBtn')
+    homeBtn: document.getElementById('homeBtn'),
+
 };
 
 async function init() {
@@ -142,7 +144,7 @@ function renderLoggedOutNav() {
 
 function updateNavUser() {
     if (State.user && UI.userNavDisplay) {
-        UI.userNavDisplay.innerHTML = `<span class="user-badge" style="margin-right: 15px;">👾 ${State.user}</span> <button class="btn btn-outline" style="padding: 0.3rem 0.8rem; font-size: 0.8rem;" id="logoutBtn">Logout</button>`;
+        UI.userNavDisplay.innerHTML = `<span class="user-badge" id="userBadge" style="margin-right: 15px; cursor: pointer;">👾 ${State.user}</span> <button class="btn btn-outline" style="padding: 0.3rem 0.8rem; font-size: 0.8rem;" id="logoutBtn">Logout</button>`;
         // NEW API Hook to check Daily Streak
         fetchUserStreak();
 
@@ -184,6 +186,169 @@ async function logActivity() {
         });
         fetchUserStreak(); // Trigger visual update of the fire badge
     } catch(e) { console.log('Streak API offline. Running in Local-Only mode.'); }
+}
+
+async function loadProfile() {
+    if(!State.user) return;
+
+    try {
+        const res = await fetch(`/api/profile/${State.user}`);
+        if(!res.ok) throw new Error('Profile fetch failed');
+
+        const data = await res.json();
+        
+        // Populate new profile elements
+        const avatar = document.getElementById('profileAvatarImg');
+        if (avatar) avatar.src = `https://i.pravatar.cc/150?u=${data.username || State.user}`;
+        
+        const usernameElem = document.getElementById('profileUsername');
+        if (usernameElem) usernameElem.textContent = data.username || State.user;
+        
+        const totalQuizzesElem = document.getElementById('profileTotalQuizzes');
+        if (totalQuizzesElem) totalQuizzesElem.textContent = data.total_quizzes_played ?? 0;
+
+        const accuracyElem = document.getElementById('profileAccuracy');
+        if (accuracyElem) accuracyElem.textContent = `${data.accuracy_percentage ?? 0}%`;
+
+        const streakElem = document.getElementById('profileStreak');
+        if (streakElem) streakElem.textContent = data.current_streak ?? 0;
+
+        // Render Quiz History (My Attempts)
+        renderHistory(data.quiz_history);
+        
+        // Render Contribution Heatmap
+        renderHeatmap(data.quiz_history);
+        
+        // Render Timeline
+        renderTimeline(data.quiz_history);
+
+        // Render Performance Chart
+        renderPerformanceChart(data.quiz_history);
+
+    } catch (e) {
+        console.error("Failed to load profile data", e);
+        // Display error state in UI
+    }
+}
+
+function renderHistory(history) {
+    const historyContainer = document.getElementById('profileHistoryList');
+    if(!historyContainer) return;
+    
+    history = Array.isArray(history) ? history : [];
+
+    if (history.length === 0) {
+        historyContainer.innerHTML = '<p class="profile-empty">No quiz history available yet.</p>';
+        return;
+    }
+
+    historyContainer.innerHTML = history.map(item => `
+        <div class="attempt-item">
+            <span>${item.quiz_name}</span>
+            <span class="stat-value">${item.score}</span>
+        </div>
+    `).join('');
+}
+
+function renderHeatmap(history) {
+    const heatmapContainer = document.getElementById('profileHeatmap');
+    if(!heatmapContainer) return;
+
+    const contributions = {};
+    const today = new Date();
+    const days = 180; // Show last 6 months
+
+    // Aggregate contributions
+    if (Array.isArray(history)) {
+        history.forEach(item => {
+            const date = new Date(item.completed_at).toISOString().split('T')[0];
+            contributions[date] = (contributions[date] || 0) + 1;
+        });
+    }
+
+    let heatmapHTML = '';
+    for (let i = days; i >= 0; i--) {
+        const date = new Date(today);
+        date.setDate(today.getDate() - i);
+        const dateString = date.toISOString().split('T')[0];
+        const count = contributions[dateString] || 0;
+        let level = 0;
+        if (count > 0) level = 1;
+        if (count > 2) level = 2;
+        if (count > 5) level = 3;
+        if (count > 8) level = 4;
+        
+        heatmapHTML += `<div class="heatmap-cell" data-level="${level}" title="${count} contributions on ${dateString}"></div>`;
+    }
+    heatmapContainer.innerHTML = heatmapHTML;
+}
+
+function renderTimeline(history) {
+    const timelineContainer = document.getElementById('profileTimeline');
+    if(!timelineContainer) return;
+    
+    history = Array.isArray(history) ? history.slice(0, 5) : [];
+
+    if (history.length === 0) {
+        timelineContainer.innerHTML = '<div class="profile-empty">Recent activity will appear here.</div>';
+        return;
+    }
+
+    timelineContainer.innerHTML = history.map(item => `
+        <div class="timeline-item">
+            <div class="timeline-icon">✅</div>
+            <div>
+                <p>Completed <strong>${item.quiz_name}</strong> with a score of ${item.score}</p>
+                <small>${new Date(item.completed_at).toLocaleDateString()}</small>
+            </div>
+        </div>
+    `).join('');
+}
+
+function renderPerformanceChart(history) {
+    const chartContainer = document.getElementById('performanceChart');
+    if (!chartContainer) return;
+
+    history = Array.isArray(history) ? history.slice(0, 10).reverse() : [];
+
+    if (history.length < 2) {
+        chartContainer.innerHTML = '<p class="profile-empty">Not enough data to display a chart.</p>';
+        return;
+    }
+
+    const scores = history.map(item => {
+        const parts = item.score.split('/');
+        return (parseInt(parts[0]) / parseInt(parts[1])) * 100;
+    });
+
+    const maxScore = 100;
+    const width = chartContainer.clientWidth;
+    const height = chartContainer.clientHeight;
+    const padding = 20;
+
+    const points = scores.map((score, index) => {
+        const x = (width - padding * 2) / (scores.length - 1) * index + padding;
+        const y = height - padding - (score / maxScore) * (height - padding * 2);
+        return `${x},${y}`;
+    }).join(' ');
+
+    const svg = `
+        <svg width="100%" height="100%" viewBox="0 0 ${width} ${height}">
+            <polyline
+                fill="none"
+                stroke="var(--primary)"
+                stroke-width="2"
+                points="${points}"
+            />
+            ${scores.map((score, index) => {
+                const x = (width - padding * 2) / (scores.length - 1) * index + padding;
+                const y = height - padding - (score / maxScore) * (height - padding * 2);
+                return `<circle cx="${x}" cy="${y}" r="4" fill="var(--primary)" />`;
+            }).join('')}
+        </svg>
+    `;
+
+    chartContainer.innerHTML = svg;
 }
 
 async function loadData() {
@@ -337,6 +502,17 @@ function bindEvents() {
         UI.navLeaderboardBtn.addEventListener('click', () => {
             if(!State.user) switchView('login');
             else showLeaderboard();
+        });
+    }
+
+    if (UI.userNavDisplay) {
+        UI.userNavDisplay.addEventListener('click', async (e) => {
+            if (e.target.closest('#userBadge')) {
+                if (State.user) {
+                    await loadProfile();
+                    switchView('profile');
+                }
+            }
         });
     }
 
