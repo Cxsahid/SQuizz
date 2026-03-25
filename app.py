@@ -7,9 +7,13 @@ import os
 import random
 import string
 import json
+import uuid
 from werkzeug.security import generate_password_hash, check_password_hash
+from werkzeug.utils import secure_filename
 
 app = Flask(__name__, static_url_path='', static_folder='.')
+app.config['UPLOAD_FOLDER'] = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'uploads')
+os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 CORS(app)
 socketio = SocketIO(app, cors_allowed_origins="*")
 
@@ -120,6 +124,10 @@ def init_db():
     ''')
     try:
         conn.execute('ALTER TABLE quiz_results ADD COLUMN time_spent INTEGER DEFAULT 0')
+    except Exception:
+        pass
+    try:
+        conn.execute('ALTER TABLE users ADD COLUMN avatar_path TEXT')
     except Exception:
         pass
     conn.commit()
@@ -297,7 +305,7 @@ def get_profile(username):
     conn = get_db_connection()
 
     user = conn.execute(
-        'SELECT username FROM users WHERE username = ?',
+        'SELECT username, avatar_path FROM users WHERE username = ?',
         (username,)
     ).fetchone()
 
@@ -349,6 +357,7 @@ def get_profile(username):
 
     return jsonify({
         'username': user['username'] if user else username,
+        'avatar_url': f"/uploads/{user['avatar_path']}" if user and user['avatar_path'] else None,
         'level': level,
         'xp': xp,
         'current_streak': calculate_current_streak(username),
@@ -358,6 +367,45 @@ def get_profile(username):
         'quiz_history': quiz_history
     })
 
+
+@app.route('/uploads/<path:filename>')
+def serve_uploads(filename):
+    return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
+
+@app.route('/api/update-avatar', methods=['POST'])
+def update_avatar():
+    username = request.form.get('username')
+    if not username:
+        return jsonify({'error': 'Username required'}), 400
+
+    conn = get_db_connection()
+    user = conn.execute('SELECT * FROM users WHERE username = ?', (username,)).fetchone()
+    if not user:
+        conn.close()
+        return jsonify({'error': 'User not found'}), 404
+
+    if 'avatar' not in request.files:
+        conn.close()
+        return jsonify({'error': 'No file uploaded'}), 400
+        
+    file = request.files['avatar']
+    if not file or not file.filename:
+        conn.close()
+        return jsonify({'error': 'Invalid file'}), 400
+
+    avatar_filename = f"{uuid.uuid4().hex}_{secure_filename(file.filename)}"
+    file.save(os.path.join(app.config['UPLOAD_FOLDER'], avatar_filename))
+
+    try:
+        conn.execute('UPDATE users SET avatar_path = ? WHERE username = ?', (avatar_filename, username))
+        conn.commit()
+    except Exception as e:
+        conn.rollback()
+        conn.close()
+        return jsonify({'error': 'Database Error'}), 500
+
+    conn.close()
+    return jsonify({'success': True, 'avatar_url': f"/uploads/{avatar_filename}"})
 
 # --- PHASE 14 MULTIPLAYER SOCKETS ---
 

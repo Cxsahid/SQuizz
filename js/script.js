@@ -212,7 +212,13 @@ async function loadProfile() {
         
         // Populate new profile elements
         const avatar = document.getElementById('profileAvatarImg');
-        if (avatar) avatar.src = `https://api.dicebear.com/7.x/bottts/svg?seed=${data.username || State.user}&backgroundColor=020617&baseColor=06b6d4`;
+        if (avatar) {
+            if (data.avatar_url) {
+                avatar.src = data.avatar_url;
+            } else {
+                avatar.src = `https://api.dicebear.com/7.x/bottts/svg?seed=${data.username || State.user}&backgroundColor=020617&baseColor=06b6d4`;
+            }
+        }
         
         const usernameElem = document.getElementById('profileUsername');
         if (usernameElem) usernameElem.textContent = data.username || State.user;
@@ -1352,12 +1358,56 @@ function setupPasswordToggle(inputId, toggleId) {
     }
 }
 
+function initAvatarUpload() {
+    const editBtn = document.getElementById('editProfileBtn');
+    const fileInput = document.getElementById('avatarUploadInput');
+    
+    if(editBtn && fileInput) {
+        editBtn.addEventListener('click', () => {
+            fileInput.click();
+        });
+        
+        fileInput.addEventListener('change', async (e) => {
+            if(e.target.files.length === 0) return;
+            const file = e.target.files[0];
+            
+            const formData = new FormData();
+            formData.append('username', State.user);
+            formData.append('avatar', file);
+            
+            editBtn.disabled = true;
+            editBtn.textContent = 'Uploading...';
+            
+            try {
+                const res = await fetch('/api/update-avatar', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await res.json();
+                
+                if(res.ok) {
+                    showToast('Profile photo updated! 📸');
+                    loadProfile(); 
+                } else {
+                    showToast('Error: ' + data.error);
+                }
+            } catch(err) {
+                showToast('Upload failed.');
+            }
+            editBtn.disabled = false;
+            editBtn.textContent = 'Edit Profile Settings';
+            fileInput.value = '';
+        });
+    }
+}
+
 const oldInit = init;
 init = function() {
     oldInit();
     initSocket();
     setupPasswordToggle('loginPassword', 'toggleLoginPassword');
     setupPasswordToggle('regPassword', 'toggleRegPassword');
+    initAvatarUpload();
 };
 
 document.addEventListener('DOMContentLoaded', init);
