@@ -1072,7 +1072,12 @@ function showLeaderboard() {
             
             let html = `<div class="lb-row lb-header"><span>Rank</span><span>Player</span><span>Score</span><span>Focus Time</span></div>`;
             lbData.forEach((entry) => {
-                let badge = entry.rank === 1 ? "🥇" : entry.rank === 2 ? "🥈" : entry.rank === 3 ? "🥉" : `${entry.rank}`;
+                let rankColor = '';
+                if(entry.rank === 1) rankColor = 'color: #FFD700; font-weight: 800; text-shadow: 0 0 12px rgba(255, 215, 0, 0.6); font-size: 1.15rem;';
+                else if(entry.rank === 2) rankColor = 'color: #E2E8F0; font-weight: 700; text-shadow: 0 0 10px rgba(226, 232, 240, 0.5); font-size: 1.1rem;';
+                else if(entry.rank === 3) rankColor = 'color: #CD7F32; font-weight: 700; text-shadow: 0 0 10px rgba(205, 127, 50, 0.5); font-size: 1.05rem;';
+                else rankColor = 'color: var(--text-secondary); font-weight: 500; font-size: 1rem;';
+
                 let level = entry.xp > 1000 ? "Master 🌟" : entry.xp > 500 ? "Expert 💎" : entry.xp > 200 ? "Intermediate 🔥" : "Beginner";
                 
                 let timeStr = "0s";
@@ -1088,7 +1093,7 @@ function showLeaderboard() {
                 }
                 
                 html += `<div class="lb-row">
-                            <span class="rank-badge">${badge}</span>
+                            <span class="rank-badge" style="${rankColor}">#${entry.rank}</span>
                             <span class="lb-name">${entry.username} <small style="color:var(--primary); font-size:0.75rem;">${level}</small></span>
                             <span class="lb-score">${entry.xp} XP</span>
                             <span>${timeStr}</span>
