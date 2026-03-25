@@ -361,6 +361,20 @@ def get_profile(username):
     ''', (username,)).fetchone()
     total_time_spent = total_time_row['total_time'] if total_time_row and total_time_row['total_time'] else 0
 
+    # Calculate Global Rank
+    # We sum scores for each user and count how many have a higher sum than the current user
+    rank_row = conn.execute('''
+        WITH RankedUsers AS (
+            SELECT username, SUM(score) as total_xp
+            FROM quiz_results
+            GROUP BY username
+        )
+        SELECT COUNT(*) + 1 as rank
+        FROM RankedUsers
+        WHERE total_xp > (SELECT COALESCE(SUM(score), 0) FROM quiz_results WHERE username = ?)
+    ''', (username,)).fetchone()
+    global_rank = rank_row['rank'] if rank_row else 'Unranked'
+
     conn.close()
 
     total_correct_answers = summary['total_correct_answers'] or 0
@@ -388,6 +402,7 @@ def get_profile(username):
         'avatar_url': f"/uploads/{user['avatar_path']}" if user and user['avatar_path'] else None,
         'level': level,
         'xp': xp,
+        'global_rank': global_rank,
         'current_streak': calculate_current_streak(username),
         'total_quizzes_played': total_quizzes_played,
         'accuracy_percentage': accuracy_percentage,
