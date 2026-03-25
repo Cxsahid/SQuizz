@@ -928,36 +928,33 @@ function renderQuestion() {
     UI.nextBtn.disabled = State.answers[State.currentQuestionIndex] === null;
 }
 
-// Phase 4 Audio Context
-let audioCtx = null;
+// Phase 4 Local File Audio Context
 function initAudio() {
-    if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    // Optional preload or state check
 }
+
 function playSound(type) {
-    if(!audioCtx) return;
-    if(audioCtx.state === 'suspended') audioCtx.resume();
-    const osc = audioCtx.createOscillator();
-    const gainNode = audioCtx.createGain();
-    
-    osc.connect(gainNode);
-    gainNode.connect(audioCtx.destination);
+    let audioPath = '';
     
     if (type === 'correct') {
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(440, audioCtx.currentTime); 
-        osc.frequency.exponentialRampToValueAtTime(880, audioCtx.currentTime + 0.1); 
-        gainNode.gain.setValueAtTime(0.5, audioCtx.currentTime);
-        gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
-        osc.start();
-        osc.stop(audioCtx.currentTime + 0.3);
-    } else {
-        osc.type = 'sawtooth';
-        osc.frequency.setValueAtTime(300, audioCtx.currentTime);
-        osc.frequency.exponentialRampToValueAtTime(150, audioCtx.currentTime + 0.3);
-        gainNode.gain.setValueAtTime(0.5, audioCtx.currentTime);
-        gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
-        osc.start();
-        osc.stop(audioCtx.currentTime + 0.3);
+        audioPath = './sounds/correct.mp3';
+    } else if (type === 'wrong') {
+        audioPath = './sounds/wrong.mp3';
+    } else if (type === 'click') {
+        audioPath = './sounds/click.mp3';
+    } else if (type === 'success') {
+        audioPath = './sounds/success.mp3';
+    }
+    
+    if (audioPath) {
+        const audio = new Audio(audioPath);
+        
+        // Prevent volume blowouts automatically
+        audio.volume = 0.5;
+        
+        audio.play().catch(e => {
+            console.log(`Please add ${audioPath} to your project folder to hear this sound.`);
+        });
     }
 }
 
