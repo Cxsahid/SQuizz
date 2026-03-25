@@ -232,39 +232,27 @@ async function loadProfile() {
 }
 
 function renderHistory(history) {
-    const historyContainer = document.getElementById('profileHistoryList');
-    if(!historyContainer) return;
-    
-    history = Array.isArray(history) ? history : [];
-
-    if (history.length === 0) {
-        historyContainer.innerHTML = '<p class="profile-empty">No quiz history available yet.</p>';
-        return;
-    }
-
-    historyContainer.innerHTML = history.map(item => `
-        <div class="attempt-item">
-            <span>${item.quiz_name}</span>
-            <span class="stat-value">${item.score}</span>
-        </div>
-    `).join('');
+    // Only used conceptually now if needed, but timeline replaced it visually.
+    // We keep empty state if no history.
 }
 
 function renderHeatmap(history) {
     const heatmapContainer = document.getElementById('profileHeatmap');
     if(!heatmapContainer) return;
 
+    if (!history || history.length === 0) {
+        heatmapContainer.innerHTML = '<p class="profile-empty" style="color:var(--text-secondary)">No activity yet. Start a quiz to light up the map!</p>';
+        return;
+    }
+
     const contributions = {};
     const today = new Date();
-    const days = 180; // Show last 6 months
+    const days = 140; // 20 weeks 
 
-    // Aggregate contributions
-    if (Array.isArray(history)) {
-        history.forEach(item => {
-            const date = new Date(item.completed_at).toISOString().split('T')[0];
-            contributions[date] = (contributions[date] || 0) + 1;
-        });
-    }
+    history.forEach(item => {
+        const date = new Date(item.completed_at).toISOString().split('T')[0];
+        contributions[date] = (contributions[date] || 0) + 1;
+    });
 
     let heatmapHTML = '';
     for (let i = days; i >= 0; i--) {
@@ -272,13 +260,16 @@ function renderHeatmap(history) {
         date.setDate(today.getDate() - i);
         const dateString = date.toISOString().split('T')[0];
         const count = contributions[dateString] || 0;
+        
         let level = 0;
         if (count > 0) level = 1;
         if (count > 2) level = 2;
-        if (count > 5) level = 3;
-        if (count > 8) level = 4;
+        if (count >= 5) level = 3;
         
-        heatmapHTML += `<div class="heatmap-cell" data-level="${level}" title="${count} contributions on ${dateString}"></div>`;
+        heatmapHTML += `
+            <div class="heatmap-cube" data-level="${level}">
+                <div class="tooltip">${count} quizzes on ${dateString}</div>
+            </div>`;
     }
     heatmapContainer.innerHTML = heatmapHTML;
 }
@@ -290,19 +281,23 @@ function renderTimeline(history) {
     history = Array.isArray(history) ? history.slice(0, 5) : [];
 
     if (history.length === 0) {
-        timelineContainer.innerHTML = '<div class="profile-empty">Recent activity will appear here.</div>';
+        timelineContainer.innerHTML = '<div class="profile-empty" style="color:var(--text-secondary)">Timeline is completely clear.</div>';
         return;
     }
 
-    timelineContainer.innerHTML = history.map(item => `
-        <div class="timeline-item">
-            <div class="timeline-icon">✅</div>
-            <div>
-                <p>Completed <strong>${item.quiz_name}</strong> with a score of ${item.score}</p>
-                <small>${new Date(item.completed_at).toLocaleDateString()}</small>
+    timelineContainer.innerHTML = history.map((item, index) => {
+        const dateObj = new Date(item.completed_at);
+        const timeStr = dateObj.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+        const dateStr = dateObj.toLocaleDateString(undefined, {month: 'short', day: 'numeric'});
+        return `
+        <div class="tle-item" style="animation-delay: ${index * 0.1}s">
+            <div class="tle-content">
+                <div class="tle-title">Completed ${item.quiz_name}</div>
+                <div class="tle-desc">Achieved a score of ${item.score}</div>
+                <span class="tle-time">${dateStr} • ${timeStr}</span>
             </div>
         </div>
-    `).join('');
+    `}).join('');
 }
 
 function renderPerformanceChart(history) {
@@ -312,7 +307,12 @@ function renderPerformanceChart(history) {
     history = Array.isArray(history) ? history.slice(0, 10).reverse() : [];
 
     if (history.length < 2) {
-        chartContainer.innerHTML = '<p class="profile-empty">Not enough data to display a chart.</p>';
+        chartContainer.innerHTML = `
+            <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; color:var(--text-secondary); text-align:center;">
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom:1rem; opacity:0.5;"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
+                <p>Not enough data to display performance chart.</p>
+            </div>
+        `;
         return;
     }
 
@@ -322,33 +322,67 @@ function renderPerformanceChart(history) {
     });
 
     const maxScore = 100;
-    const width = chartContainer.clientWidth;
-    const height = chartContainer.clientHeight;
-    const padding = 20;
+    const width = chartContainer.clientWidth || 600;
+    const height = chartContainer.clientHeight || 250;
+    const paddingX = 20;
+    const paddingY = 40;
 
-    const points = scores.map((score, index) => {
-        const x = (width - padding * 2) / (scores.length - 1) * index + padding;
-        const y = height - padding - (score / maxScore) * (height - padding * 2);
-        return `${x},${y}`;
-    }).join(' ');
+    let pathD = `M ${paddingX} ${height}`; // Start for area fill
+    let lineD = '';
+    
+    const pointsData = scores.map((score, index) => {
+        const x = ((width - paddingX * 2) / (scores.length - 1)) * index + paddingX;
+        const y = height - paddingY - (score / maxScore) * (height - paddingY * 2);
+        
+        if(index === 0) {
+            pathD += ` L ${x} ${y}`;
+            lineD += `M ${x} ${y}`;
+        } else {
+            // Smooth curve
+            const prevX = ((width - paddingX * 2) / (scores.length - 1)) * (index - 1) + paddingX;
+            const prevY = height - paddingY - (scores[index-1] / maxScore) * (height - paddingY * 2);
+            const cpX1 = prevX + (x - prevX) / 2;
+            pathD += ` C ${cpX1} ${prevY}, ${cpX1} ${y}, ${x} ${y}`;
+            lineD += ` C ${cpX1} ${prevY}, ${cpX1} ${y}, ${x} ${y}`;
+        }
+        return { x, y, score, name: history[index].quiz_name };
+    });
+
+    pathD += ` L ${pointsData[pointsData.length-1].x} ${height} Z`;
 
     const svg = `
-        <svg width="100%" height="100%" viewBox="0 0 ${width} ${height}">
-            <polyline
-                fill="none"
-                stroke="var(--primary)"
-                stroke-width="2"
-                points="${points}"
-            />
-            ${scores.map((score, index) => {
-                const x = (width - padding * 2) / (scores.length - 1) * index + padding;
-                const y = height - padding - (score / maxScore) * (height - padding * 2);
-                return `<circle cx="${x}" cy="${y}" r="4" fill="var(--primary)" />`;
-            }).join('')}
+        <svg width="100%" height="100%" viewBox="0 0 ${width} ${height}" class="chart-svg">
+            <defs>
+                <linearGradient id="chartGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stop-color="var(--primary)" stop-opacity="0.6"/>
+                    <stop offset="100%" stop-color="var(--primary)" stop-opacity="0"/>
+                </linearGradient>
+            </defs>
+            <path class="chart-area" d="${pathD}" />
+            <path class="chart-line" d="${lineD}" />
+            ${pointsData.map((p) => `
+                <g class="chart-point" transform="translate(${p.x},${p.y})" style="cursor:pointer;">
+                    <circle r="5" fill="var(--bg-dark)" stroke="var(--primary)" stroke-width="2" class="chart-circle" style="transition:all 0.2s;" onmouseover="this.setAttribute('r', '8'); this.setAttribute('fill', 'var(--primary)')" onmouseout="this.setAttribute('r', '5'); this.setAttribute('fill', 'var(--bg-dark)')" />
+                    <foreignObject x="-75" y="-45" width="150" height="40" style="overflow:visible;">
+                        <div class="tooltip" style="position:static; transform:none; opacity:0; margin:0 auto; width:max-content; pointer-events:none;">
+                            ${p.score.toFixed(0)}% on ${p.name}
+                        </div>
+                    </foreignObject>
+                </g>
+            `).join('')}
         </svg>
     `;
 
     chartContainer.innerHTML = svg;
+
+    // Small animation effect for stat counters
+    document.querySelectorAll('.counter-anim').forEach(el => {
+        el.style.opacity = '0';
+        setTimeout(() => {
+            el.style.transition = 'opacity 0.8s ease';
+            el.style.opacity = '1';
+        }, 100);
+    });
 }
 
 async function loadData() {
