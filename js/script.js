@@ -151,6 +151,19 @@ function updateNavUser() {
         document.getElementById('logoutBtn').addEventListener('click', () => {
             localStorage.removeItem('squizz_active_user');
             State.user = null;
+            
+            // Defeat browser cache on inputs upon logout
+            const loginId = document.getElementById('loginIdentifier');
+            const loginPw = document.getElementById('loginPassword');
+            const regU = document.getElementById('regUsername');
+            const regE = document.getElementById('regEmail');
+            const regP = document.getElementById('regPassword');
+            if(loginId) loginId.value = '';
+            if(loginPw) loginPw.value = '';
+            if(regU) regU.value = '';
+            if(regE) regE.value = '';
+            if(regP) regP.value = '';
+            
             renderLoggedOutNav();
             switchView('hero');
         });
