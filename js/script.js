@@ -934,29 +934,8 @@ function initAudio() {
 }
 
 function playSound(type) {
-    let audioPath = '';
-    
-    if (type === 'correct') {
-        audioPath = './sounds/correct.mp3';
-    } else if (type === 'wrong') {
-        audioPath = './sounds/wrong.mp3';
-    } else if (type === 'click') {
-        audioPath = './sounds/click.mp3';
-    } else if (type === 'success') {
-        // Linked exactly to your uploaded file
-        audioPath = './WhatsApp Audio 2026-03-26 at 04.48.40.mpeg';
-    }
-    
-    if (audioPath) {
-        const audio = new Audio(audioPath);
-        
-        // Prevent volume blowouts automatically
-        audio.volume = 0.5;
-        
-        audio.play().catch(e => {
-            console.log(`Please add ${audioPath} to your project folder to hear this sound.`);
-        });
-    }
+    // Disabled temporarily per user request
+    return;
 }
 
 function selectOption(idx) {
@@ -1048,7 +1027,6 @@ function showResults() {
          UI.resultMessage.textContent = "Good effort. Try again to improve! 📈";
     }
     
-    playSound('success');
     switchView('result');
 }
 
