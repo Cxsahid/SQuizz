@@ -217,8 +217,14 @@
                         credentials to continue your journey.</p>
                     <input type="text" id="loginIdentifier" class="input-field" placeholder="Username or Email ID"
                         autocomplete="off">
-                    <input type="password" id="loginPassword" class="input-field" placeholder="Password"
-                        autocomplete="new-password">
+                    <div style="position: relative;">
+                        <input type="password" id="loginPassword" class="input-field" placeholder="Password"
+                            autocomplete="new-password" style="padding-right: 40px;">
+                        <svg id="toggleLoginPassword" style="position: absolute; right: 15px; top: 50%; transform: translateY(-50%); cursor: pointer; color: var(--text-secondary);" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                            <circle cx="12" cy="12" r="3"></circle>
+                        </svg>
+                    </div>
                     <p id="loginError" style="color: #ef4444; margin-top: 0.5rem; display: none;">Invalid credentials.
                     </p>
                     <button class="btn btn-primary btn-lg mt-4" id="loginSubmitBtn" style="width: 100%;">Log In <span
@@ -239,8 +245,14 @@
                     <input type="text" id="regUsername" class="input-field" placeholder="Choose a Username"
                         maxlength="15" autocomplete="off">
                     <input type="email" id="regEmail" class="input-field" placeholder="Email ID" autocomplete="off">
-                    <input type="password" id="regPassword" class="input-field" placeholder="Create a new Password"
-                        autocomplete="new-password">
+                    <div style="position: relative;">
+                        <input type="password" id="regPassword" class="input-field" placeholder="Create a new Password"
+                            autocomplete="new-password" style="padding-right: 40px;">
+                        <svg id="toggleRegPassword" style="position: absolute; right: 15px; top: 50%; transform: translateY(-50%); cursor: pointer; color: var(--text-secondary);" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                            <circle cx="12" cy="12" r="3"></circle>
+                        </svg>
+                    </div>
                     <p id="regError" style="color: #ef4444; margin-top: 0.5rem; display: none;">Error creating account.
                     </p>
                     <button class="btn btn-primary btn-lg mt-4" id="regSubmitBtn" style="width: 100%;">Register Account
