@@ -1361,9 +1361,23 @@ function setupPasswordToggle(inputId, toggleId) {
 function initAvatarUpload() {
     const editBtn = document.getElementById('editProfileBtn');
     const fileInput = document.getElementById('avatarUploadInput');
+    const avatarModal = document.getElementById('avatarEditModal');
+    const closeAvatarModalBtn = document.getElementById('closeAvatarModalBtn');
+    const triggerUploadBtn = document.getElementById('triggerUploadBtn');
+    const avatarPreview = document.getElementById('avatarModalImagePreview');
     
-    if(editBtn && fileInput) {
+    if(editBtn && fileInput && avatarModal) {
         editBtn.addEventListener('click', () => {
+            const currentImgSrc = document.getElementById('profileAvatarImg').src;
+            avatarPreview.src = currentImgSrc;
+            avatarModal.style.display = 'flex';
+        });
+        
+        closeAvatarModalBtn.addEventListener('click', () => {
+            avatarModal.style.display = 'none';
+        });
+        
+        triggerUploadBtn.addEventListener('click', () => {
             fileInput.click();
         });
         
@@ -1371,12 +1385,17 @@ function initAvatarUpload() {
             if(e.target.files.length === 0) return;
             const file = e.target.files[0];
             
+            const reader = new FileReader();
+            reader.onload = (ev) => { avatarPreview.src = ev.target.result; };
+            reader.readAsDataURL(file);
+            
             const formData = new FormData();
             formData.append('username', State.user);
             formData.append('avatar', file);
             
-            editBtn.disabled = true;
-            editBtn.textContent = 'Uploading...';
+            const originalBtnHtml = triggerUploadBtn.innerHTML;
+            triggerUploadBtn.disabled = true;
+            triggerUploadBtn.textContent = 'Uploading...';
             
             try {
                 const res = await fetch('/api/update-avatar', {
@@ -1388,14 +1407,15 @@ function initAvatarUpload() {
                 if(res.ok) {
                     showToast('Profile photo updated! 📸');
                     loadProfile(); 
+                    setTimeout(() => { avatarModal.style.display = 'none'; }, 800);
                 } else {
                     showToast('Error: ' + data.error);
                 }
             } catch(err) {
                 showToast('Upload failed.');
             }
-            editBtn.disabled = false;
-            editBtn.textContent = 'Edit Profile Settings';
+            triggerUploadBtn.disabled = false;
+            triggerUploadBtn.innerHTML = originalBtnHtml;
             fileInput.value = '';
         });
     }
