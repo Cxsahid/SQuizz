@@ -976,21 +976,6 @@ function showResults() {
     let points = score * 100;
     if(score > 0) points += Math.max(0, (State.questions.length * 15 - State.totalSeconds) * 2);
 
-    if (State.user) {
-        const lbData = JSON.parse(localStorage.getItem('squizz_leaderboard')) || [];
-        const existing = lbData.find(e => e.name === State.user);
-        if(existing) {
-            existing.points = (existing.points || 0) + points;
-            if(score > existing.score || (score === existing.score && State.totalSeconds < existing.time)) {
-                existing.score = score;
-                existing.time = State.totalSeconds;
-            }
-        } else {
-            lbData.push({ name: State.user, score: score, time: State.totalSeconds, points: points });
-        }
-        localStorage.setItem('squizz_leaderboard', JSON.stringify(lbData));
-    }
-
     UI.finalScoreText.textContent = `${score}/${State.questions.length}`;
     if(UI.accuracyText) {
         UI.accuracyText.textContent = `${Math.round((score/State.questions.length)*100)}%`;
@@ -1025,30 +1010,44 @@ function showLeaderboard() {
     switchView('leaderboard');
     if(!UI.leaderboardContent) return;
     
-    const lbData = JSON.parse(localStorage.getItem('squizz_leaderboard')) || [];
-    lbData.sort((a,b) => b.score - a.score || a.time - b.time);
-    
-    if(lbData.length === 0) {
-        UI.leaderboardContent.innerHTML = "<p class='text-center'>No rankings yet. Be the first!</p>";
-        return;
-    }
-    
-    let html = `<div class="lb-row lb-header"><span>Rank</span><span>Player</span><span>Score</span><span>Time</span></div>`;
-    lbData.slice(0, 10).forEach((entry, idx) => {
-        let badge = idx === 0 ? "🥇" : idx === 1 ? "🥈" : idx === 2 ? "🥉" : `${idx+1}`;
-        let level = entry.points > 1000 ? "Master 🌟" : entry.points > 500 ? "Expert 💎" : entry.points > 200 ? "Intermediate 🔥" : "Beginner";
-        let min = Math.floor(entry.time/60);
-        let sec = entry.time%60;
-        let tStr = `${min < 10 ? '0'+min : min}:${sec < 10 ? '0'+sec : sec}`;
-        
-        html += `<div class="lb-row">
-                    <span class="rank-badge">${badge}</span>
-                    <span class="lb-name">${entry.name} <small style="color:var(--primary); font-size:0.75rem;">${level} (${entry.points || 0} XP)</small></span>
-                    <span class="lb-score">${entry.score} pts</span>
-                    <span>${tStr}</span>
-                 </div>`;
-    });
-    UI.leaderboardContent.innerHTML = html;
+    fetch('/api/leaderboard')
+        .then(res => res.json())
+        .then(lbData => {
+            if(lbData.length === 0) {
+                UI.leaderboardContent.innerHTML = "<p class='text-center'>No rankings yet. Be the first!</p>";
+                return;
+            }
+            
+            let html = `<div class="lb-row lb-header"><span>Rank</span><span>Player</span><span>Score</span><span>Focus Time</span></div>`;
+            lbData.forEach((entry) => {
+                let badge = entry.rank === 1 ? "🥇" : entry.rank === 2 ? "🥈" : entry.rank === 3 ? "🥉" : `${entry.rank}`;
+                let level = entry.xp > 1000 ? "Master 🌟" : entry.xp > 500 ? "Expert 💎" : entry.xp > 200 ? "Intermediate 🔥" : "Beginner";
+                
+                let timeStr = "0s";
+                if(entry.time > 0) {
+                    const h = Math.floor(entry.time / 3600);
+                    const m = Math.floor((entry.time % 3600) / 60);
+                    const s = entry.time % 60;
+                    let parts = [];
+                    if (h > 0) parts.push(`${h}h`);
+                    if (m > 0 || h > 0) parts.push(`${m}m`);
+                    parts.push(`${s}s`);
+                    timeStr = parts.join(' ');
+                }
+                
+                html += `<div class="lb-row">
+                            <span class="rank-badge">${badge}</span>
+                            <span class="lb-name">${entry.username} <small style="color:var(--primary); font-size:0.75rem;">${level}</small></span>
+                            <span class="lb-score">${entry.xp} XP</span>
+                            <span>${timeStr}</span>
+                         </div>`;
+            });
+            UI.leaderboardContent.innerHTML = html;
+        })
+        .catch(err => {
+            UI.leaderboardContent.innerHTML = "<p class='text-center text-danger'>Global rankings temporarily unavailable.</p>";
+            console.error(err);
+        });
 }
 
 // Phase 13 Feature Activation
