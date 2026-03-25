@@ -198,13 +198,15 @@ def register_user():
         return jsonify({'error': 'Username, email, and password are required'}), 400
 
     conn = get_db_connection()
+    # Enforce Uniqueness
+    existing = conn.execute('SELECT * FROM users WHERE username = ? OR email = ?', (username, email)).fetchone()
+    if existing:
+        conn.close()
+        return jsonify({'error': 'Username or Email is already taken. Please choose another one.'}), 409
+
     conn.execute('''
         INSERT INTO users (username, email, password, updated_at)
         VALUES (?, ?, ?, CURRENT_TIMESTAMP)
-        ON CONFLICT(username) DO UPDATE SET
-            email = excluded.email,
-            password = excluded.password,
-            updated_at = CURRENT_TIMESTAMP
     ''', (username, email, password))
     conn.commit()
     conn.close()
@@ -214,6 +216,27 @@ def register_user():
         'username': username,
         'email': email
     })
+
+@app.route('/api/login', methods=['POST'])
+def login_user():
+    data = request.json or {}
+    identifier = (data.get('identifier') or '').strip()
+    password = (data.get('password') or '').strip()
+
+    if not identifier or not password:
+        return jsonify({'error': 'Username/Email and password are required'}), 400
+
+    conn = get_db_connection()
+    user = conn.execute('''
+        SELECT * FROM users 
+        WHERE (username = ? OR email = ?) AND password = ?
+    ''', (identifier, identifier, password)).fetchone()
+    conn.close()
+
+    if user:
+        return jsonify({'success': True, 'username': user['username']})
+    else:
+        return jsonify({'error': 'Invalid credentials. Please try again.'}), 401
 
 
 @app.route('/api/quiz-result', methods=['POST'])
