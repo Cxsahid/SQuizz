@@ -367,13 +367,13 @@ function renderPerformanceChart(history) {
     const chartContainer = document.getElementById('performanceChart');
     if (!chartContainer) return;
 
-    history = Array.isArray(history) ? history.slice(0, 10).reverse() : [];
+    history = Array.isArray(history) ? history.reverse() : []; // infinite
 
     if (history.length < 2) {
         chartContainer.innerHTML = `
             <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; color:var(--text-secondary); text-align:center;">
                 <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom:1rem; opacity:0.5;"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
-                <p>Not enough data to display performance chart.</p>
+                <p>Play at least 2 quizzes to generate your performance chart.</p>
             </div>
         `;
         return;
@@ -385,10 +385,17 @@ function renderPerformanceChart(history) {
     });
 
     const maxScore = 100;
-    const width = chartContainer.clientWidth || 600;
-    const height = chartContainer.clientHeight || 250;
-    const paddingX = 20;
-    const paddingY = 40;
+    const paddingX = 40;
+    const paddingY = 60;
+    const pointSpacing = 120; // 120px per point for wide graph
+    const width = Math.max(chartContainer.clientWidth || 600, paddingX * 2 + (history.length - 1) * pointSpacing);
+    const height = chartContainer.clientHeight || 280; // slightly taller to fit tooltips
+
+    // Apply scroll style
+    chartContainer.style.overflowX = 'auto';
+    chartContainer.style.overflowY = 'hidden';
+    chartContainer.style.scrollbarWidth = 'thin';
+    chartContainer.style.scrollbarColor = 'var(--primary) rgba(255,255,255,0.05)';
 
     let pathD = `M ${paddingX} ${height}`; // Start for area fill
     let lineD = '';
@@ -401,20 +408,24 @@ function renderPerformanceChart(history) {
             pathD += ` L ${x} ${y}`;
             lineD += `M ${x} ${y}`;
         } else {
-            // Smooth curve
             const prevX = ((width - paddingX * 2) / (scores.length - 1)) * (index - 1) + paddingX;
             const prevY = height - paddingY - (scores[index-1] / maxScore) * (height - paddingY * 2);
             const cpX1 = prevX + (x - prevX) / 2;
             pathD += ` C ${cpX1} ${prevY}, ${cpX1} ${y}, ${x} ${y}`;
             lineD += ` C ${cpX1} ${prevY}, ${cpX1} ${y}, ${x} ${y}`;
         }
-        return { x, y, score, name: history[index].quiz_name };
+        
+        const dateObj = new Date(history[index].completed_at);
+        const timeStr = dateObj.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+        const dateStr = dateObj.toLocaleDateString(undefined, {month: 'short', day: 'numeric'});
+        
+        return { x, y, score, name: history[index].quiz_name, datetime: `${dateStr} @ ${timeStr}` };
     });
 
     pathD += ` L ${pointsData[pointsData.length-1].x} ${height} Z`;
 
     const svg = `
-        <svg width="100%" height="100%" viewBox="0 0 ${width} ${height}" class="chart-svg">
+        <svg width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" class="chart-svg">
             <defs>
                 <linearGradient id="chartGradient" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="0%" stop-color="var(--primary)" stop-opacity="0.6"/>
@@ -425,10 +436,11 @@ function renderPerformanceChart(history) {
             <path class="chart-line" d="${lineD}" />
             ${pointsData.map((p) => `
                 <g class="chart-point" transform="translate(${p.x},${p.y})" style="cursor:pointer;">
-                    <circle r="5" fill="var(--bg-dark)" stroke="var(--primary)" stroke-width="2" class="chart-circle" style="transition:all 0.2s;" onmouseover="this.setAttribute('r', '8'); this.setAttribute('fill', 'var(--primary)')" onmouseout="this.setAttribute('r', '5'); this.setAttribute('fill', 'var(--bg-dark)')" />
-                    <foreignObject x="-75" y="-45" width="150" height="40" style="overflow:visible;">
-                        <div class="tooltip" style="position:static; transform:none; opacity:0; margin:0 auto; width:max-content; pointer-events:none;">
-                            ${p.score.toFixed(0)}% on ${p.name}
+                    <circle r="6" fill="var(--bg-dark)" stroke="var(--primary)" stroke-width="2" class="chart-circle" style="transition:all 0.2s;" onmouseover="this.setAttribute('r', '9'); this.setAttribute('fill', 'var(--primary)')" onmouseout="this.setAttribute('r', '6'); this.setAttribute('fill', 'var(--bg-dark)')" />
+                    <foreignObject x="-95" y="-60" width="190" height="60" style="overflow:visible; z-index: 100;">
+                        <div class="tooltip" style="position:static; transform:none; opacity:0; margin:0 auto; width:max-content; pointer-events:none; padding:0.5rem 0.8rem; text-align:center; background:rgba(2,6,23,0.9); border:1px solid var(--primary); border-radius:6px; box-shadow:0 5px 15px rgba(0,0,0,0.5), inset 0 0 10px rgba(6,182,212,0.2);">
+                            <span style="font-weight:bold; color:var(--text-primary);">${p.score.toFixed(0)}%</span> <span style="color:var(--text-secondary);">on ${p.name}</span><br>
+                            <span style="color:var(--primary); font-size: 0.70rem; font-family:monospace; letter-spacing:1px;">🗓️ ${p.datetime}</span>
                         </div>
                     </foreignObject>
                 </g>
@@ -437,6 +449,11 @@ function renderPerformanceChart(history) {
     `;
 
     chartContainer.innerHTML = svg;
+    
+    // Automatically scroll chart to the end natively to show latest data
+    setTimeout(() => {
+        chartContainer.scrollLeft = chartContainer.scrollWidth;
+    }, 100);
 
     // Small animation effect for stat counters
     document.querySelectorAll('.counter-anim').forEach(el => {
