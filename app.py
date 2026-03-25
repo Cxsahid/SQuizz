@@ -7,13 +7,9 @@ import os
 import random
 import string
 import json
-import uuid
 from werkzeug.security import generate_password_hash, check_password_hash
-from werkzeug.utils import secure_filename
 
 app = Flask(__name__, static_url_path='', static_folder='.')
-app.config['UPLOAD_FOLDER'] = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'uploads')
-os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 CORS(app)
 socketio = SocketIO(app, cors_allowed_origins="*")
 
@@ -124,10 +120,6 @@ def init_db():
     ''')
     try:
         conn.execute('ALTER TABLE quiz_results ADD COLUMN time_spent INTEGER DEFAULT 0')
-    except Exception:
-        pass
-    try:
-        conn.execute('ALTER TABLE users ADD COLUMN avatar_path TEXT')
     except Exception:
         pass
     conn.commit()
@@ -305,7 +297,7 @@ def get_profile(username):
     conn = get_db_connection()
 
     user = conn.execute(
-        'SELECT username, avatar_path FROM users WHERE username = ?',
+        'SELECT username FROM users WHERE username = ?',
         (username,)
     ).fetchone()
 
@@ -357,7 +349,6 @@ def get_profile(username):
 
     return jsonify({
         'username': user['username'] if user else username,
-        'avatar_url': f"/uploads/{user['avatar_path']}" if user and user['avatar_path'] else None,
         'level': level,
         'xp': xp,
         'current_streak': calculate_current_streak(username),
@@ -367,68 +358,6 @@ def get_profile(username):
         'quiz_history': quiz_history
     })
 
-
-@app.route('/uploads/<path:filename>')
-def serve_uploads(filename):
-    return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
-
-@app.route('/api/update-profile', methods=['POST'])
-def update_profile():
-    current_username = request.form.get('currentUsername')
-    new_username = request.form.get('newUsername')
-    
-    if not current_username:
-        return jsonify({'error': 'Current username is required'}), 400
-
-    conn = get_db_connection()
-    user = conn.execute('SELECT * FROM users WHERE username = ?', (current_username,)).fetchone()
-    if not user:
-        conn.close()
-        return jsonify({'error': 'User not found'}), 404
-
-    target_username = new_username.strip() if new_username and new_username.strip() else current_username
-
-    if target_username != current_username:
-        existing = conn.execute('SELECT username FROM users WHERE username = ?', (target_username,)).fetchone()
-        if existing:
-            conn.close()
-            return jsonify({'error': 'Username is already taken.'}), 409
-
-    avatar_filename = user['avatar_path']
-    if 'avatar' in request.files:
-        file = request.files['avatar']
-        if file and file.filename:
-            avatar_filename = f"{uuid.uuid4().hex}_{secure_filename(file.filename)}"
-            file.save(os.path.join(app.config['UPLOAD_FOLDER'], avatar_filename))
-
-    try:
-        conn.execute('BEGIN TRANSACTION')
-        conn.execute(
-            'UPDATE users SET username = ?, avatar_path = ?, updated_at = CURRENT_TIMESTAMP WHERE username = ?',
-            (target_username, avatar_filename, current_username)
-        )
-        if target_username != current_username:
-            conn.execute('UPDATE quiz_results SET username = ? WHERE username = ?', (target_username, current_username))
-            conn.execute('UPDATE activity_logs SET username = ? WHERE username = ?', (target_username, current_username))
-            try:
-                conn.execute('UPDATE multiplayer_players SET username = ? WHERE username = ?', (target_username, current_username))
-                conn.execute('UPDATE multiplayer_rooms SET host = ? WHERE host = ?', (target_username, current_username))
-            except Exception:
-                pass
-        
-        conn.commit()
-    except Exception as e:
-        conn.rollback()
-        conn.close()
-        return jsonify({'error': f'Database update failed: {str(e)}'}), 500
-
-    conn.close()
-
-    return jsonify({
-        'success': True,
-        'username': target_username,
-        'avatar_url': f"/uploads/{avatar_filename}" if avatar_filename else None
-    })
 
 # --- PHASE 14 MULTIPLAYER SOCKETS ---
 
