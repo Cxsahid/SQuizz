@@ -1047,6 +1047,7 @@ function showResults() {
          UI.resultMessage.textContent = "Good effort. Try again to improve! 📈";
     }
     
+    playSound('success');
     switchView('result');
 }
 
