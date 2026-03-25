@@ -199,7 +199,7 @@ async function loadProfile() {
         
         // Populate new profile elements
         const avatar = document.getElementById('profileAvatarImg');
-        if (avatar) avatar.src = `https://ui-avatars.com/api/?name=${data.username || State.user}&background=020617&color=06b6d4&size=150`;
+        if (avatar) avatar.src = `https://api.dicebear.com/7.x/bottts/svg?seed=${data.username || State.user}&backgroundColor=020617&baseColor=06b6d4`;
         
         const usernameElem = document.getElementById('profileUsername');
         if (usernameElem) usernameElem.textContent = data.username || State.user;
@@ -232,6 +232,14 @@ async function loadProfile() {
             
             if(levelPercentage) levelPercentage.textContent = `${progressPercent}% to Lv. ${level + 1}`;
             if(progressBar) progressBar.style.width = `${progressPercent}%`;
+        }
+
+        const profileTotalTime = document.getElementById('profileTotalTime');
+        if (profileTotalTime) {
+            const totalSecs = data.total_time_spent || 0;
+            const m = Math.floor(totalSecs / 60);
+            const s = totalSecs % 60;
+            profileTotalTime.innerHTML = `⏱️ Total Focus: <span style="color:var(--primary);">${m}m ${s}s</span>`;
         }
 
         // Render Quiz History (My Attempts)
@@ -310,11 +318,20 @@ function renderTimeline(history) {
         const dateObj = new Date(item.completed_at);
         const timeStr = dateObj.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
         const dateStr = dateObj.toLocaleDateString(undefined, {month: 'short', day: 'numeric'});
+        
+        let durationStr = "A few seconds";
+        if (item.time_spent > 0) {
+            const m = Math.floor(item.time_spent / 60);
+            const s = item.time_spent % 60;
+            if (m > 0) durationStr = `${m}m ${s}s`;
+            else durationStr = `${s}s`;
+        }
+
         return `
         <div class="tle-item" style="animation-delay: ${index * 0.1}s">
             <div class="tle-content">
                 <div class="tle-title">Completed ${item.quiz_name}</div>
-                <div class="tle-desc">Achieved a score of ${item.score}</div>
+                <div class="tle-desc">Achieved a score of ${item.score} <br> <span style="font-size:0.75rem; color:var(--primary);">⏱️ Focus Time: ${durationStr}</span></div>
                 <span class="tle-time">${dateStr} • ${timeStr}</span>
             </div>
         </div>
@@ -937,7 +954,8 @@ function showResults() {
                 username: State.user,
                 quiz_name: quizName,
                 score: score,
-                total_questions: totalQ
+                total_questions: totalQ,
+                time_spent: State.totalSeconds
             })
         }).catch(err => console.error("Failed to save quiz result", err));
     }
