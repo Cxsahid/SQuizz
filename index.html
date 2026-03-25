@@ -525,6 +525,147 @@
                 </div>
             </section>
         </main>
+
+        <!-- Official SQuizz Footer & Help Center -->
+        <style>
+        .squizz-footer {
+            background: rgba(2, 6, 23, 0.95);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-top: 1px solid rgba(6, 182, 212, 0.2);
+            padding: 3.5rem 2rem 1.5rem;
+            margin-top: auto;
+            position: relative;
+            z-index: 10;
+        }
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1.2fr 1fr 1.5fr;
+            gap: 4rem;
+        }
+        .footer-brand h2 {
+            font-size: 2.2rem;
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.5rem;
+            letter-spacing: -1px;
+        }
+        .footer-brand p {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            margin-bottom: 1.5rem;
+            line-height: 1.5;
+        }
+        .footer-links {
+            display: flex;
+            flex-direction: column;
+            gap: 0.8rem;
+        }
+        .footer-links a, .footer-help a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: color 0.3s ease, transform 0.3s ease;
+            font-size: 0.95rem;
+            display: inline-block;
+        }
+        .footer-links a:hover, .footer-help a:hover {
+            color: var(--primary);
+            transform: translateX(4px);
+        }
+        .footer-help h3, .footer-contact h3 {
+            color: var(--text-primary);
+            font-size: 1.15rem;
+            margin-bottom: 1.5rem;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+        .footer-help ul {
+            list-style: none;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 0.8rem;
+        }
+        .footer-contact .input-field {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            margin-bottom: 0.8rem;
+            font-size: 0.9rem;
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+        .footer-contact .input-field:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 15px rgba(6, 182, 212, 0.15);
+            background: rgba(255, 255, 255, 0.05);
+        }
+        .footer-contact button {
+            border-radius: 8px;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+        }
+        .footer-bottom {
+            max-width: 1200px;
+            margin: 3rem auto 0;
+            padding-top: 1.5rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            text-align: center;
+            color: rgba(255, 255, 255, 0.3);
+            font-size: 0.85rem;
+        }
+        
+        @media (max-width: 850px) {
+            .footer-content {
+                grid-template-columns: 1fr;
+                gap: 2.5rem;
+            }
+        }
+        </style>
+        
+        <footer class="squizz-footer" id="squizzFooter">
+            <div class="footer-content">
+                <!-- Left: Branding & Links -->
+                <div class="footer-brand">
+                    <h2>SQuizz</h2>
+                    <p>Elevating personal mastery through dynamic AI-driven quizzing environments and real-time multiplayer engagements.</p>
+                    <div class="footer-links">
+                        <a href="#">Company Origins</a>
+                        <a href="#">Privacy Protocol</a>
+                        <a href="#">Terms of Service</a>
+                    </div>
+                </div>
+
+                <!-- Middle: Help Center Links -->
+                <div class="footer-help">
+                    <h3>Help Center</h3>
+                    <ul>
+                        <li><a href="#">Platform FAQ</a></li>
+                        <li><a href="#">Account Troubleshooting</a></li>
+                        <li><a href="#">Community Guidelines</a></li>
+                        <li><a href="#">Report a Vulnerability</a></li>
+                    </ul>
+                </div>
+
+                <!-- Right: Contact Us Form -->
+                <div class="footer-contact">
+                    <h3>Contact Us</h3>
+                    <form id="contactUsForm">
+                        <input type="text" id="contactUsername" class="input-field" placeholder="Username (Optional)">
+                        <input type="email" id="contactEmail" class="input-field" placeholder="Your Email Address" required>
+                        <textarea id="contactDesc" class="input-field" placeholder="Describe your issue or feedback..." rows="3" required style="resize: vertical;"></textarea>
+                        <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 0.2rem;">Submit Ticket</button>
+                    </form>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2026 SQuizz Interactive Platform. All rights reserved.</p>
+            </div>
+        </footer>
     </div>
 
     <!-- Avatar Upload Modal -->
