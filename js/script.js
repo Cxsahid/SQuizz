@@ -1465,6 +1465,7 @@ async function initDynamicHeroCard() {
             const p = userProgress[q.title] || { completedQuestions: 0, percentage: 0, accuracy: 0, avgTime: "0s", xp: 0 };
             
             mainCard.style.opacity = '0';
+            mainCard.style.transform = 'perspective(1500px) rotateY(90deg) scale(0.95)';
             
             setTimeout(() => {
                 document.getElementById('heroQuizTitle').textContent = q.title;
@@ -1491,6 +1492,7 @@ async function initDynamicHeroCard() {
                 };
 
                 mainCard.style.opacity = '1';
+                mainCard.style.transform = 'perspective(1500px) rotateY(0deg) scale(1)';
             }, 300);
 
             cycleIdx = (cycleIdx + 1) % trendingQuizzes.length;
