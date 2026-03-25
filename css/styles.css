@@ -134,8 +134,6 @@ a { text-decoration: none; color: inherit; transition: color var(--transition-fa
     text-shadow: var(--glow-cyan);
 }
 
-}
-
 .nav-links { display: flex; gap: 2rem; }
 
 .nav-link {
