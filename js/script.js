@@ -129,6 +129,7 @@ function checkUser() {
     const storedUser = localStorage.getItem('squizz_active_user');
     if (storedUser) {
         State.user = storedUser;
+        State.avatarUrl = localStorage.getItem('squizz_avatar_url');
         updateNavUser();
     } else {
         renderLoggedOutNav();
@@ -154,6 +155,7 @@ function updateNavUser() {
                 .then(r => r.json())
                 .then(data => {
                     State.avatarUrl = data.avatar_url || fallback;
+                    localStorage.setItem('squizz_avatar_url', State.avatarUrl);
                     updateNavUser(); // Re-render with image
                 });
         }
@@ -1467,13 +1469,15 @@ async function initDynamicHeroCard() {
         const rankXp = document.getElementById('heroRankXp');
         const streakCount = document.getElementById('streakCountText');
 
-        if(userProfile.xp > 0) {
+        if(userProfile.xp > 0 || userProfile.global_rank === 1) {
             if(streakCount) streakCount.textContent = `${userProfile.current_streak || 0} Days`;
             if(rankXp) rankXp.textContent = `XP: ${(userProfile.xp || 0).toLocaleString()}`;
-            if(userProfile.xp > 5000) { if(rankTitle) rankTitle.textContent = 'Top 1%'; if(rankGlobal) rankGlobal.textContent = 'Rank #245'; }
-            else if(userProfile.xp > 2000) { if(rankTitle) rankTitle.textContent = 'Top 5%'; if(rankGlobal) rankGlobal.textContent = 'Rank #1,402'; }
-            else if(userProfile.xp > 500) { if(rankTitle) rankTitle.textContent = 'Top 15%'; if(rankGlobal) rankGlobal.textContent = 'Rank #8,940'; }
-            else { if(rankTitle) rankTitle.textContent = 'Top 50%'; if(rankGlobal) rankGlobal.textContent = 'Rank #45,000+';}
+            
+            if(rankGlobal) rankGlobal.textContent = `Rank #${userProfile.global_rank}`;
+            
+            if(userProfile.global_rank <= 10) { if(rankTitle) rankTitle.textContent = 'Elite 💎'; }
+            else if(userProfile.global_rank <= 100) { if(rankTitle) rankTitle.textContent = 'Pro 🌟'; }
+            else { if(rankTitle) rankTitle.textContent = 'Challenger 🔥'; }
         } else {
             if(streakCount) streakCount.textContent = `0 Days`;
             if(rankXp) rankXp.textContent = `XP: 0`;
