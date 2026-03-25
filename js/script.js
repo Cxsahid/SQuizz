@@ -674,6 +674,7 @@ function bindEvents() {
                 if(res.ok && data.success) {
                     localStorage.setItem('squizz_active_user', data.username);
                     State.user = data.username;
+                    State.avatarUrl = null; // New user starts with no custom avatar
                     updateNavUser();
                     switchView('hero');
                     regError.style.display = 'none';
