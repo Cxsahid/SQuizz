@@ -113,9 +113,14 @@ def init_db():
             quiz_name TEXT NOT NULL,
             score INTEGER NOT NULL,
             total_questions INTEGER NOT NULL,
+            time_spent INTEGER DEFAULT 0,
             completed_at DATETIME DEFAULT CURRENT_TIMESTAMP
         )
     ''')
+    try:
+        conn.execute('ALTER TABLE quiz_results ADD COLUMN time_spent INTEGER DEFAULT 0')
+    except Exception:
+        pass
     conn.commit()
     conn.close()
 
@@ -246,6 +251,7 @@ def save_quiz_result():
     quiz_name = (data.get('quiz_name') or '').strip()
     score = data.get('score')
     total_questions = data.get('total_questions')
+    time_spent = data.get('time_spent', 0)
 
     if not username or not quiz_name:
         return jsonify({'error': 'Username and quiz_name are required'}), 400
@@ -253,8 +259,9 @@ def save_quiz_result():
     try:
         score = int(score)
         total_questions = int(total_questions)
+        time_spent = int(time_spent)
     except (TypeError, ValueError):
-        return jsonify({'error': 'score and total_questions must be integers'}), 400
+        return jsonify({'error': 'score, total_questions and time_spent must be integers'}), 400
 
     conn = get_db_connection()
     existing_user = conn.execute(
@@ -269,9 +276,9 @@ def save_quiz_result():
         )
 
     conn.execute('''
-        INSERT INTO quiz_results (username, quiz_name, score, total_questions)
-        VALUES (?, ?, ?, ?)
-    ''', (username, quiz_name, score, total_questions))
+        INSERT INTO quiz_results (username, quiz_name, score, total_questions, time_spent)
+        VALUES (?, ?, ?, ?, ?)
+    ''', (username, quiz_name, score, total_questions, time_spent))
     conn.commit()
     conn.close()
 
@@ -297,12 +304,19 @@ def get_profile(username):
     ''', (username,)).fetchone()
 
     history_rows = conn.execute('''
-        SELECT quiz_name, score, total_questions
+        SELECT quiz_name, score, total_questions, time_spent, completed_at
         FROM quiz_results
         WHERE username = ?
         ORDER BY completed_at DESC, id DESC
         LIMIT 5
     ''', (username,)).fetchall()
+
+    total_time_row = conn.execute('''
+        SELECT SUM(time_spent) as total_time
+        FROM quiz_results
+        WHERE username = ?
+    ''', (username,)).fetchone()
+    total_time_spent = total_time_row['total_time'] if total_time_row and total_time_row['total_time'] else 0
 
     conn.close()
 
@@ -321,7 +335,9 @@ def get_profile(username):
     for row in history_rows:
         quiz_history.append({
             'quiz_name': row['quiz_name'],
-            'score': f"{row['score']}/{row['total_questions']}"
+            'score': f"{row['score']}/{row['total_questions']}",
+            'time_spent': row['time_spent'] or 0,
+            'completed_at': row['completed_at']
         })
 
     return jsonify({
@@ -331,6 +347,7 @@ def get_profile(username):
         'current_streak': calculate_current_streak(username),
         'total_quizzes_played': total_quizzes_played,
         'accuracy_percentage': accuracy_percentage,
+        'total_time_spent': total_time_spent,
         'quiz_history': quiz_history
     })
 
