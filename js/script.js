@@ -652,6 +652,32 @@ function bindEvents() {
     const regEmail = document.getElementById('regEmail');
     const regPassword = document.getElementById('regPassword');
     const regError = document.getElementById('regError');
+    const regSubmitBtn = document.getElementById('regSubmitBtn');
+    if(regSubmitBtn) {
+        regSubmitBtn.addEventListener('click', async () => {
+            const u = regUsername.value.trim();
+            const e = regEmail.value.trim();
+            const p = regPassword.value.trim();
+            if(!u || !e || !p) {
+                regError.textContent = "All fields are required.";
+                regError.style.display = 'block';
+                return;
+            }
+            try {
+                const res = await fetch('/api/register', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({username: u, email: e, password: p})
+                });
+                const data = await res.json();
+                
+                if(res.ok && data.success) {
+                    localStorage.setItem('squizz_active_user', data.username);
+                    State.user = data.username;
+                    State.avatarUrl = null; // New user starts with no custom avatar
+                    updateNavUser();
+                    switchView('hero');
+                    regError.style.display = 'none';
                     regUsername.value = ''; regEmail.value = ''; regPassword.value = '';
                 } else {
                     regError.textContent = data.error || "Registration failed.";
