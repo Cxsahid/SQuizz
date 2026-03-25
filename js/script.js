@@ -1421,6 +1421,88 @@ function initAvatarUpload() {
     }
 }
 
+let heroCycleInterval = null;
+
+async function initDynamicHeroCard() {
+    const mainCard = document.getElementById('heroMainCard');
+    if(!mainCard) return;
+
+    try {
+        const [trendRes, progRes, profileRes] = await Promise.all([
+            fetch('/api/quiz/trending'),
+            State.user ? fetch(`/api/user/progress/${State.user}`) : Promise.resolve({json: ()=>({})}),
+            State.user ? fetch(`/api/profile/${State.user}`) : Promise.resolve({json: ()=>({xp: 0, current_streak: 0})})
+        ]);
+
+        const trendingQuizzes = await trendRes.json();
+        const userProgress = await progRes.json();
+        const userProfile = await profileRes.json();
+
+        const rankTitle = document.getElementById('heroRankTitle');
+        const rankGlobal = document.getElementById('heroRankGlobal');
+        const rankXp = document.getElementById('heroRankXp');
+        const streakCount = document.getElementById('streakCountText');
+
+        if(userProfile.xp > 0) {
+            if(streakCount) streakCount.textContent = `${userProfile.current_streak || 0} Days`;
+            if(rankXp) rankXp.textContent = `XP: ${(userProfile.xp || 0).toLocaleString()}`;
+            if(userProfile.xp > 5000) { if(rankTitle) rankTitle.textContent = 'Top 1%'; if(rankGlobal) rankGlobal.textContent = 'Rank #245'; }
+            else if(userProfile.xp > 2000) { if(rankTitle) rankTitle.textContent = 'Top 5%'; if(rankGlobal) rankGlobal.textContent = 'Rank #1,402'; }
+            else if(userProfile.xp > 500) { if(rankTitle) rankTitle.textContent = 'Top 15%'; if(rankGlobal) rankGlobal.textContent = 'Rank #8,940'; }
+            else { if(rankTitle) rankTitle.textContent = 'Top 50%'; if(rankGlobal) rankGlobal.textContent = 'Rank #45,000+';}
+        } else {
+            if(streakCount) streakCount.textContent = `0 Days`;
+            if(rankXp) rankXp.textContent = `XP: 0`;
+            if(rankTitle) rankTitle.textContent = 'Unranked';
+            if(rankGlobal) rankGlobal.textContent = 'Play to Rank';
+        }
+
+        let cycleIdx = 0;
+        
+        const updateHeroUI = () => {
+            if(!trendingQuizzes || trendingQuizzes.length === 0) return;
+            const q = trendingQuizzes[cycleIdx];
+            const p = userProgress[q.title] || { completedQuestions: 0, percentage: 0, accuracy: 0, avgTime: "0s", xp: 0 };
+            
+            mainCard.style.opacity = '0';
+            
+            setTimeout(() => {
+                document.getElementById('heroQuizTitle').textContent = q.title;
+                document.getElementById('heroQuizDesc').textContent = q.description;
+                document.getElementById('heroStatAccuracy').textContent = `${p.accuracy}%`;
+                document.getElementById('heroStatTime').textContent = p.avgTime;
+                document.getElementById('heroStatDiff').textContent = q.difficulty;
+                
+                document.getElementById('heroQuizLevel').textContent = `Level ${q.level}`;
+                document.getElementById('heroQuizProgressPct').textContent = `${p.percentage}%`;
+                document.getElementById('heroQuizProgressBar').style.width = `${p.percentage}%`;
+                document.getElementById('heroQuizCompletedText').textContent = `${p.completedQuestions}/${q.totalQuestions} Questions Completed`;
+                document.getElementById('heroQuizXpText').textContent = `+${p.xp} XP earned`;
+                
+                mainCard.onclick = () => {
+                    if(!State.user) return showToast('Please login to play trending quizzes.');
+                    const matchedCat = window.categoriesData && window.categoriesData.find(c => c.name.toLowerCase() === q.title.toLowerCase());
+                    if(matchedCat) {
+                        startQuiz(matchedCat);
+                        switchView('quiz');
+                    } else {
+                        showToast(`Preparing ${q.title} module directly...`);
+                    }
+                };
+
+                mainCard.style.opacity = '1';
+            }, 300);
+
+            cycleIdx = (cycleIdx + 1) % trendingQuizzes.length;
+        };
+
+        updateHeroUI();
+        if(heroCycleInterval) clearInterval(heroCycleInterval);
+        heroCycleInterval = setInterval(updateHeroUI, 5000);
+        
+    } catch(e) { console.log('Error initializing dynamic hero card', e); }
+}
+
 const oldInit = init;
 init = function() {
     oldInit();
@@ -1428,6 +1510,16 @@ init = function() {
     setupPasswordToggle('loginPassword', 'toggleLoginPassword');
     setupPasswordToggle('regPassword', 'toggleRegPassword');
     initAvatarUpload();
+    initDynamicHeroCard();
+};
+
+// Also listen to post-login to reload the hero card seamlessly
+const originalShowLogout = showToast;
+showToast = function(msg) {
+    originalShowLogout(msg);
+    if(msg.includes('Login successful') || msg.includes('Welcome')) {
+        setTimeout(initDynamicHeroCard, 1000);
+    }
 };
 
 document.addEventListener('DOMContentLoaded', init);

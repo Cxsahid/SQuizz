@@ -104,9 +104,9 @@
 
                     <!-- 3D/Glassmorphism Visual Composition -->
                     <div class="hero-visual">
-                        <div class="glass-card main-card">
+                        <div class="glass-card main-card" id="heroMainCard" style="cursor: pointer; transition: opacity 0.4s ease;">
                             <div class="card-header">
-                                <span class="pill trending">🔥 Trending</span>
+                                <span class="pill trending" id="heroTrendingTag">🔥 Trending</span>
                                 <div class="window-controls"><span></span><span></span><span></span></div>
                             </div>
                             <div class="card-image-placeholder">
@@ -126,37 +126,52 @@
                                     <path d="M6 18a4 4 0 0 1-1.967-.516"></path>
                                     <path d="M19.967 17.484A4 4 0 0 1 18 18"></path>
                                 </svg>
+                                <div id="heroAiRecommended" style="font-size: 0.70rem; color: var(--primary); margin-top: 8px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; text-shadow: 0 0 10px rgba(6,182,212,0.8);">AI Recommended</div>
                             </div>
                             <div class="card-body">
-                                <h3>Advanced JavaScript</h3>
-                                <p class="card-desc">Master closures, promises, and the event loop in this
-                                    advanced test.</p>
+                                <h3 id="heroQuizTitle">Connecting...</h3>
+                                <p class="card-desc" id="heroQuizDesc">Fetching trending topics from AI backend...</p>
+                                
+                                <div id="heroMinimalStats" style="display: flex; gap: 0.8rem; font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 1rem; flex-wrap: wrap;">
+                                    <span>🎯 <strong id="heroStatAccuracy">0%</strong></span>
+                                    <span>⏱️ <strong id="heroStatTime">0s</strong></span>
+                                    <span>⚡ <strong id="heroStatDiff">Medium</strong></span>
+                                </div>
+
                                 <div class="progress-wrap">
                                     <div class="progress-info">
-                                        <span>Level 7</span>
-                                        <span>75%</span>
+                                        <span id="heroQuizLevel">Level 1</span>
+                                        <span id="heroQuizProgressPct">0%</span>
                                     </div>
                                     <div class="progress-bar-bg">
-                                        <div class="progress-bar-fill" style="width: 75%"></div>
+                                        <div class="progress-bar-fill" id="heroQuizProgressBar" style="width: 0%; transition: width 0.6s ease-in-out;"></div>
+                                    </div>
+                                    <div style="display: flex; justify-content: space-between; margin-top: 0.4rem; font-size: 0.75rem;">
+                                        <span id="heroQuizCompletedText" style="color: var(--text-secondary);">0/0 Questions Completed</span>
+                                        <span id="heroQuizXpText" style="color: #10b981; font-weight: 600;">+0 XP earned</span>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
-                        <div class="glass-card float-card float-1">
+                        <div class="glass-card float-card float-1" id="heroRankCard" title="Based on total aggregated XP">
                             <div class="icon-circle icon-purple">🏆</div>
                             <div class="float-info">
-                                <h4>Top 1%</h4>
+                                <h4 id="heroRankTitle">Top Rank</h4>
                                 <p>Global Rank</p>
+                                <div style="font-size: 0.7rem; color: var(--text-secondary); margin-top: 4px;">
+                                    <span id="heroRankGlobal" style="display: block;">Checking...</span>
+                                    <span id="heroRankXp" style="display: block; color: var(--primary);">XP: 0</span>
+                                </div>
                             </div>
                         </div>
 
-                        <div class="glass-card float-card float-2" id="streakCardContainer">
+                        <div class="glass-card float-card float-2" id="heroStreakCard" title="Play daily to extend your streak">
                             <div class="icon-circle icon-blue"
                                 style="color: #f97316; text-shadow: 0 0 15px rgba(249, 115, 22, 0.6); font-size: 1.4rem;">
                                 🔥</div>
                             <div class="float-info">
-                                <h4 id="streakCountText">0 Days</h4>
+                                <h4 id="streakCountText" style="margin-bottom: 2px;">0 Days</h4>
                                 <p>Streak <span id="warriorBadge" style="font-size: 0.8rem; font-weight: 600;"></span>
                                 </p>
                             </div>
