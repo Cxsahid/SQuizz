@@ -107,7 +107,12 @@
                         <div class="glass-card main-card" id="heroMainCard" style="cursor: pointer; transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.4s ease; transform-style: preserve-3d; will-change: transform, opacity;">
                             <div class="card-header">
                                 <span class="pill trending" id="heroTrendingTag">🔥 Trending</span>
-                                <div class="window-controls"><span></span><span></span><span></span></div>
+                                <div style="display:flex; align-items:center; gap:10px;">
+                                    <button id="heroShareBtn" class="btn-icon-glass" title="Share my Stats">
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path><polyline points="16 6 12 2 8 6"></polyline><line x1="12" y1="2" x2="12" y2="15"></line></svg>
+                                    </button>
+                                    <div class="window-controls"><span></span><span></span><span></span></div>
+                                </div>
                             </div>
                             <div class="card-image-placeholder">
                                 <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -521,7 +526,12 @@
                         <p>Accuracy: <span id="accuracyText" class="text-gradient">0%</span></p>
                     </div>
                     <p id="resultMessage" class="result-msg"></p>
-                    <button class="btn btn-primary btn-lg mt-4" id="homeBtn">Go to Home</button>
+                    <div style="display:flex; gap:1rem; justify-content:center; margin-top:1.5rem;">
+                        <button class="btn btn-outline btn-lg" id="resultShareBtn">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:8px;"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path><polyline points="16 6 12 2 8 6"></polyline><line x1="12" y1="2" x2="12" y2="15"></line></svg> Share Score
+                        </button>
+                        <button class="btn btn-primary btn-lg" id="homeBtn">Go to Home</button>
+                    </div>
                 </div>
             </section>
         </main>
