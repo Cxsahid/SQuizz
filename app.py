@@ -299,6 +299,32 @@ def save_quiz_result():
 
     return jsonify({'success': True})
 
+@app.route('/api/leaderboard', methods=['GET'])
+def get_leaderboard():
+    conn = get_db_connection()
+    # Rank players by sum of scores across all their attempts, then by fastest total time
+    leaders = conn.execute('''
+        SELECT 
+            username, 
+            COALESCE(SUM(score), 0) as total_score,
+            COALESCE(SUM(time_spent), 0) as total_time
+        FROM quiz_results
+        GROUP BY username
+        ORDER BY total_score DESC, total_time ASC
+        LIMIT 100
+    ''').fetchall()
+    conn.close()
+
+    leaderboard = []
+    for rank, row in enumerate(leaders, start=1):
+        leaderboard.append({
+            "rank": rank,
+            "username": row['username'],
+            "xp": row['total_score'] * 100,
+            "time": row['total_time']
+        })
+        
+    return jsonify(leaderboard)
 
 @app.route('/api/profile/<username>', methods=['GET'])
 def get_profile(username):
