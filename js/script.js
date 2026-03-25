@@ -943,7 +943,8 @@ function playSound(type) {
     } else if (type === 'click') {
         audioPath = './sounds/click.mp3';
     } else if (type === 'success') {
-        audioPath = './sounds/success.mp3';
+        // Linked exactly to your uploaded file
+        audioPath = './WhatsApp Audio 2026-03-26 at 04.48.40.mpeg';
     }
     
     if (audioPath) {
