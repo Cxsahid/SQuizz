@@ -462,20 +462,34 @@ function bindEvents() {
     const loginPassword = document.getElementById('loginPassword');
     const loginError = document.getElementById('loginError');
     if(UI.loginSubmitBtn) {
-        UI.loginSubmitBtn.addEventListener('click', () => {
+        UI.loginSubmitBtn.addEventListener('click', async () => {
             const id = loginIdentifier.value.trim();
             const pw = loginPassword.value.trim();
-            const users = JSON.parse(localStorage.getItem('squizz_users_db')) || [];
-            
-            const user = users.find(u => (u.username === id || u.email === id) && u.password === pw);
-            if(user) {
-                localStorage.setItem('squizz_active_user', user.username);
-                State.user = user.username;
-                updateNavUser();
-                switchView('hero');
-                loginError.style.display = 'none';
-                loginIdentifier.value = ''; loginPassword.value = '';
-            } else {
+            if(!id || !pw) {
+                loginError.textContent = "All fields are required.";
+                loginError.style.display = 'block';
+                return;
+            }
+            try {
+                const res = await fetch('/api/login', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({identifier: id, password: pw})
+                });
+                const data = await res.json();
+                if(res.ok && data.success) {
+                    localStorage.setItem('squizz_active_user', data.username);
+                    State.user = data.username;
+                    updateNavUser();
+                    switchView('hero');
+                    loginError.style.display = 'none';
+                    loginIdentifier.value = ''; loginPassword.value = '';
+                } else {
+                    loginError.textContent = data.error || "Invalid credentials.";
+                    loginError.style.display = 'block';
+                }
+            } catch (e) {
+                loginError.textContent = "Server connection failed.";
                 loginError.style.display = 'block';
             }
         });
@@ -488,7 +502,7 @@ function bindEvents() {
     const regError = document.getElementById('regError');
     const regSubmitBtn = document.getElementById('regSubmitBtn');
     if(regSubmitBtn) {
-        regSubmitBtn.addEventListener('click', () => {
+        regSubmitBtn.addEventListener('click', async () => {
             const u = regUsername.value.trim();
             const e = regEmail.value.trim();
             const p = regPassword.value.trim();
@@ -497,20 +511,29 @@ function bindEvents() {
                 regError.style.display = 'block';
                 return;
             }
-            const users = JSON.parse(localStorage.getItem('squizz_users_db')) || [];
-            if(users.find(user => user.username === u || user.email === e)) {
-                regError.textContent = "Username or Email already taken.";
+            try {
+                const res = await fetch('/api/register', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({username: u, email: e, password: p})
+                });
+                const data = await res.json();
+                
+                if(res.ok && data.success) {
+                    localStorage.setItem('squizz_active_user', data.username);
+                    State.user = data.username;
+                    updateNavUser();
+                    switchView('hero');
+                    regError.style.display = 'none';
+                    regUsername.value = ''; regEmail.value = ''; regPassword.value = '';
+                } else {
+                    regError.textContent = data.error || "Registration failed.";
+                    regError.style.display = 'block';
+                }
+            } catch (err) {
+                regError.textContent = "Server connection failed.";
                 regError.style.display = 'block';
-                return;
             }
-            users.push({ username: u, email: e, password: p });
-            localStorage.setItem('squizz_users_db', JSON.stringify(users));
-            localStorage.setItem('squizz_active_user', u);
-            State.user = u;
-            updateNavUser();
-            switchView('hero');
-            regError.style.display = 'none';
-            regUsername.value = ''; regEmail.value = ''; regPassword.value = '';
         });
     }
     
