@@ -237,9 +237,16 @@ async function loadProfile() {
         const profileTotalTime = document.getElementById('profileTotalTime');
         if (profileTotalTime) {
             const totalSecs = data.total_time_spent || 0;
-            const m = Math.floor(totalSecs / 60);
+            const h = Math.floor(totalSecs / 3600);
+            const m = Math.floor((totalSecs % 3600) / 60);
             const s = totalSecs % 60;
-            profileTotalTime.innerHTML = `⏱️ Total Focus: <span style="color:var(--primary);">${m}m ${s}s</span>`;
+            
+            let parts = [];
+            if (h > 0) parts.push(`${h}h`);
+            if (m > 0 || h > 0) parts.push(`${m}m`);
+            parts.push(`${s}s`);
+            
+            profileTotalTime.innerHTML = `⏱️ Total Focus: <span style="color:var(--primary);">${parts.join(' ')}</span>`;
         }
 
         // Render Quiz History (My Attempts)
@@ -319,12 +326,17 @@ function renderTimeline(history) {
         const timeStr = dateObj.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
         const dateStr = dateObj.toLocaleDateString(undefined, {month: 'short', day: 'numeric'});
         
-        let durationStr = "A few seconds";
+        let durationStr = "0s";
         if (item.time_spent > 0) {
-            const m = Math.floor(item.time_spent / 60);
+            const h = Math.floor(item.time_spent / 3600);
+            const m = Math.floor((item.time_spent % 3600) / 60);
             const s = item.time_spent % 60;
-            if (m > 0) durationStr = `${m}m ${s}s`;
-            else durationStr = `${s}s`;
+            
+            let parts = [];
+            if (h > 0) parts.push(`${h}h`);
+            if (m > 0) parts.push(`${m}m`);
+            parts.push(`${s}s`);
+            durationStr = parts.join(' ');
         }
 
         return `
