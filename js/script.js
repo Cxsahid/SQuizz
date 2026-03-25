@@ -610,7 +610,9 @@ function bindEvents() {
                 const data = await res.json();
                 if(res.ok && data.success) {
                     localStorage.setItem('squizz_active_user', data.username);
+                    if(data.avatar_url) localStorage.setItem('squizz_avatar_url', data.avatar_url);
                     State.user = data.username;
+                    State.avatarUrl = data.avatar_url;
                     updateNavUser();
                     switchView('hero');
                     loginError.style.display = 'none';
