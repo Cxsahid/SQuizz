@@ -199,7 +199,7 @@ async function loadProfile() {
         
         // Populate new profile elements
         const avatar = document.getElementById('profileAvatarImg');
-        if (avatar) avatar.src = `https://i.pravatar.cc/150?u=${data.username || State.user}`;
+        if (avatar) avatar.src = `https://ui-avatars.com/api/?name=${data.username || State.user}&background=020617&color=06b6d4&size=150`;
         
         const usernameElem = document.getElementById('profileUsername');
         if (usernameElem) usernameElem.textContent = data.username || State.user;
@@ -212,6 +212,27 @@ async function loadProfile() {
 
         const streakElem = document.getElementById('profileStreak');
         if (streakElem) streakElem.textContent = data.current_streak ?? 0;
+
+        // NEW: Load Level and XP Progress
+        const levelDisplay = document.getElementById('profileLevelDisplay');
+        const levelTitle = document.getElementById('profileLevelTitle');
+        const levelPercentage = document.getElementById('profileLevelPercentage');
+        const progressBar = document.getElementById('profileProgressBar');
+        
+        if(levelDisplay) {
+            const level = data.level || 1;
+            levelDisplay.textContent = `Level ${level}`;
+            
+            const titles = ["Novice Explorer", "Beginner Learner", "Tech Enthusiast", "Code Artisan", "Senior Full-Stack Engineer", "Principal Architect", "System Lord", "AI Overlord"];
+            const titleIndex = Math.min(Math.floor((level - 1) / 5), titles.length - 1);
+            if(levelTitle) levelTitle.textContent = titles[titleIndex];
+            
+            const xpInCurrentLevel = (data.xp || 0) % 500;
+            const progressPercent = Math.round((xpInCurrentLevel / 500) * 100);
+            
+            if(levelPercentage) levelPercentage.textContent = `${progressPercent}% to Lv. ${level + 1}`;
+            if(progressBar) progressBar.style.width = `${progressPercent}%`;
+        }
 
         // Render Quiz History (My Attempts)
         renderHistory(data.quiz_history);
@@ -901,8 +922,25 @@ function showResults() {
     
     let score = 0;
     State.questions.forEach((q, idx) => {
-        if (State.answers[idx] === q.answer) score++;
+        if (State.answers[idx] === q.answer || State.answers[idx] === q.answer.toString()) score++;
     });
+
+    const quizName = State.currentCategory ? State.currentCategory.name : "Custom Quiz";
+    const totalQ = State.questions.length;
+
+    // Phase 15: Save quiz run to DB to update profile graphs and xp
+    if (State.user) {
+        fetch('/api/quiz-result', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                username: State.user,
+                quiz_name: quizName,
+                score: score,
+                total_questions: totalQ
+            })
+        }).catch(err => console.error("Failed to save quiz result", err));
+    }
     
     // Points logic
     let points = score * 100;
