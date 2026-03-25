@@ -161,11 +161,11 @@ function updateNavUser() {
         const avatarSrc = State.avatarUrl || fallback;
 
         UI.userNavDisplay.innerHTML = `
-            <div class="nav-user-info" id="userBadge" style="display:flex; align-items:center; gap:0.8rem; cursor:pointer;">
+            <div class="nav-user-info" id="userBadge" style="display:flex; align-items:center; gap:0.5rem; cursor:pointer;">
                 <div class="nav-avatar-small">
                     <img src="${avatarSrc}" alt="Nav Avatar" id="navAvatarImg">
                 </div>
-                <span class="user-badge-text">👾 ${u}</span>
+                <span class="user-badge-text">${u}</span>
             </div>
             <button class="btn btn-outline" style="padding: 0.3rem 0.8rem; font-size: 0.8rem; margin-left: 1rem;" id="logoutBtn">Logout</button>
         `;
