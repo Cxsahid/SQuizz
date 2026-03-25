@@ -600,7 +600,26 @@ function bindEvents() {
             }
         });
     }
-    
+
+    // Help Center Contact Us Logic
+    const contactForm = document.getElementById('contactUsForm');
+    if(contactForm) {
+        contactForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const btn = contactForm.querySelector('button[type="submit"]');
+            const originalText = btn.textContent;
+            btn.textContent = 'Transmitting...';
+            btn.disabled = true;
+            
+            setTimeout(() => {
+                showToast('Ticket submitted! Our Support Team will email you shortly. 📩');
+                contactForm.reset();
+                btn.textContent = originalText;
+                btn.disabled = false;
+            }, 1200);
+        });
+    }
+
     // Register Form Logic
     const regUsername = document.getElementById('regUsername');
     const regEmail = document.getElementById('regEmail');
