@@ -751,4 +751,90 @@ svg.chart-svg { overflow: visible; }
 .tle-time { font-size: 0.75rem; color: var(--primary); margin-top: 0.5rem; display: block; font-family: monospace; }
 /* --- Profile Dashboard End --- */
 
+/* --- High Progress Coder Enhancements --- */
+.pro-badge {
+    position: absolute;
+    bottom: -10px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: linear-gradient(90deg, #d946ef, var(--secondary));
+    color: #fff;
+    font-size: 0.75rem;
+    font-weight: 800;
+    padding: 0.25rem 0.75rem;
+    border-radius: var(--radius-full);
+    border: 2px solid #05070d;
+    box-shadow: 0 0 15px rgba(217, 70, 239, 0.5);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    z-index: 3;
+    letter-spacing: 1px;
+}
+
+.profile-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-top: -0.25rem;
+    letter-spacing: 1px;
+}
+
+.t-badge {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: var(--text-secondary);
+    padding: 0.3rem 0.8rem;
+    border-radius: var(--radius-md);
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    transition: all var(--transition-fast);
+}
+
+.t-badge:hover {
+    background: rgba(6, 182, 212, 0.1);
+    border-color: var(--primary);
+    color: var(--primary);
+    box-shadow: 0 0 10px rgba(6, 182, 212, 0.3);
+}
+
+.progress-animated::after {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: linear-gradient(
+        45deg,
+        rgba(255, 255, 255, 0.2) 25%,
+        transparent 25%,
+        transparent 50%,
+        rgba(255, 255, 255, 0.2) 50%,
+        rgba(255, 255, 255, 0.2) 75%,
+        transparent 75%,
+        transparent
+    );
+    background-size: 30px 30px;
+    animation: moveStripes 1s linear infinite;
+    border-radius: var(--radius-full);
+}
+
+@keyframes moveStripes {
+    0% { background-position: 0 0; }
+    100% { background-position: 30px 0; }
+}
+
+/* Animations for Dashboard icons inserted */
+.feature-icon {
+    animation: floatIcon 4s ease-in-out infinite alternate;
+}
+
+.feature-card:hover .feature-icon {
+    animation-play-state: paused;
+}
+
+@keyframes floatIcon {
+    0% { transform: translateY(0) scale(1); box-shadow: inset 0 0 15px rgba(6, 182, 212, 0.1); }
+    100% { transform: translateY(-8px) scale(1.05); box-shadow: inset 0 0 25px rgba(6, 182, 212, 0.3), 0 0 15px var(--glow-cyan); }
+}
+
 
