@@ -410,9 +410,9 @@ def update_avatar():
 @app.route('/api/quiz/trending', methods=['GET'])
 def get_trending_quizzes():
     trending = [
-        {"id": "js_advanced", "title": "Advanced JavaScript", "description": "Master closures, promises, and the event loop.", "level": 7, "difficulty": "Hard", "totalQuestions": 20},
-        {"id": "python_basics", "title": "Python Basics", "description": "Strengthen your core foundation in Python data structures.", "level": 3, "difficulty": "Medium", "totalQuestions": 15},
-        {"id": "react_hooks", "title": "React Architecture", "description": "Deep dive into component lifecycle and advanced states.", "level": 6, "difficulty": "Hard", "totalQuestions": 18}
+        {"id": "javascript", "title": "JavaScript Fundamentals", "description": "Master closures, promises, and the event loop in this advanced test.", "level": 7, "difficulty": "Hard", "totalQuestions": 10},
+        {"id": "python", "title": "Python Mastery", "description": "Strengthen your core foundation in Python data structures and logic.", "level": 3, "difficulty": "Medium", "totalQuestions": 10},
+        {"id": "react", "title": "React.js Architecture", "description": "Deep dive into component lifecycle and advanced states.", "level": 6, "difficulty": "Hard", "totalQuestions": 10}
     ]
     return jsonify(trending)
 
