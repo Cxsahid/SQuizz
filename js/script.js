@@ -212,13 +212,8 @@ async function loadProfile() {
         
         // Populate new profile elements
         const avatar = document.getElementById('profileAvatarImg');
-        if (avatar) {
-            if (data.avatar_url) {
-                avatar.src = data.avatar_url;
-            } else {
-                avatar.src = `https://api.dicebear.com/7.x/bottts/svg?seed=${data.username || State.user}&backgroundColor=020617&baseColor=06b6d4`;
-            }
-        }
+        if (avatar) avatar.src = `https://api.dicebear.com/7.x/bottts/svg?seed=${data.username || State.user}&backgroundColor=020617&baseColor=06b6d4`;
+        
         const usernameElem = document.getElementById('profileUsername');
         if (usernameElem) usernameElem.textContent = data.username || State.user;
         
@@ -1357,78 +1352,12 @@ function setupPasswordToggle(inputId, toggleId) {
     }
 }
 
-function initProfileEditing() {
-    const editSection = document.getElementById('editProfileSection');
-    const openBtn = document.getElementById('openEditBtn');
-    const cancelBtn = document.getElementById('cancelEditBtn');
-    const saveBtn = document.getElementById('saveProfileBtn');
-    
-    if(openBtn) {
-        openBtn.addEventListener('click', () => {
-            editSection.style.display = 'block';
-            openBtn.style.display = 'none';
-            document.getElementById('editUsernameInput').value = State.user;
-            document.getElementById('editAvatarInput').value = '';
-        });
-    }
-    
-    if(cancelBtn) {
-        cancelBtn.addEventListener('click', () => {
-            editSection.style.display = 'none';
-            openBtn.style.display = 'block';
-        });
-    }
-    
-    if(saveBtn) {
-        saveBtn.addEventListener('click', async () => {
-            const newUName = document.getElementById('editUsernameInput').value.trim();
-            const fileInput = document.getElementById('editAvatarInput');
-            
-            if(!newUName) return showToast('Username cannot be empty');
-            
-            const formData = new FormData();
-            formData.append('currentUsername', State.user);
-            formData.append('newUsername', newUName);
-            if(fileInput.files.length > 0) {
-                formData.append('avatar', fileInput.files[0]);
-            }
-            
-            saveBtn.disabled = true;
-            saveBtn.textContent = 'Saving...';
-            
-            try {
-                const res = await fetch('/api/update-profile', {
-                    method: 'POST',
-                    body: formData
-                });
-                const data = await res.json();
-                
-                if(res.ok) {
-                    showToast('Profile updated globally! 🚀');
-                    State.user = data.username;
-                    localStorage.setItem('squizz_user', data.username);
-                    editSection.style.display = 'none';
-                    openBtn.style.display = 'block';
-                    loadProfile(); 
-                } else {
-                    showToast('Error: ' + data.error);
-                }
-            } catch(e) {
-                showToast('Failed to connect to backend updating service.');
-            }
-            saveBtn.disabled = false;
-            saveBtn.textContent = 'Save Updates';
-        });
-    }
-}
-
 const oldInit = init;
 init = function() {
     oldInit();
     initSocket();
     setupPasswordToggle('loginPassword', 'toggleLoginPassword');
     setupPasswordToggle('regPassword', 'toggleRegPassword');
-    initProfileEditing();
 };
 
 document.addEventListener('DOMContentLoaded', init);
