@@ -7,6 +7,7 @@ import os
 import random
 import string
 import json
+from werkzeug.security import generate_password_hash, check_password_hash
 
 app = Flask(__name__, static_url_path='', static_folder='.')
 CORS(app)
@@ -202,6 +203,9 @@ def register_user():
     if not username or not email or not password:
         return jsonify({'error': 'Username, email, and password are required'}), 400
 
+    if len(password) < 8:
+        return jsonify({'error': 'Password must be at least 8 characters long for security.'}), 400
+
     conn = get_db_connection()
     # Enforce Uniqueness
     existing = conn.execute('SELECT * FROM users WHERE username = ? OR email = ?', (username, email)).fetchone()
@@ -209,10 +213,12 @@ def register_user():
         conn.close()
         return jsonify({'error': 'Username or Email is already taken. Please choose another one.'}), 409
 
+    hashed_password = generate_password_hash(password)
+
     conn.execute('''
         INSERT INTO users (username, email, password, updated_at)
         VALUES (?, ?, ?, CURRENT_TIMESTAMP)
-    ''', (username, email, password))
+    ''', (username, email, hashed_password))
     conn.commit()
     conn.close()
 
@@ -234,11 +240,12 @@ def login_user():
     conn = get_db_connection()
     user = conn.execute('''
         SELECT * FROM users 
-        WHERE (username = ? OR email = ?) AND password = ?
-    ''', (identifier, identifier, password)).fetchone()
+        WHERE (username = ? OR email = ?)
+    ''', (identifier, identifier)).fetchone()
     conn.close()
 
-    if user:
+    # Verify cryptographic hash of the password
+    if user and check_password_hash(user['password'], password):
         return jsonify({'success': True, 'username': user['username']})
     else:
         return jsonify({'error': 'Invalid credentials. Please try again.'}), 401
