@@ -638,4 +638,4 @@ def handle_submit_answer(data):
 if __name__ == '__main__':
     init_db()
     print("Starting SQuizz Multiplayer Socket API Engine...")
-    socketio.run(app, port=8082, debug=True)
+    socketio.run(app, host='0.0.0.0', port=8082, debug=True)
