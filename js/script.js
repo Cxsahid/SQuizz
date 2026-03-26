@@ -1580,21 +1580,29 @@ async function sharePlatform(type) {
         text = `I just scored ${score} on ${category} in SQuizz! 🚀 Challenge me now!`;
     }
 
-    if (navigator.share) {
-        try {
-            await navigator.share({ title, text, url });
-            showToast('Shared successfully! 🌐');
-        } catch (err) {
-            console.log('Share cancelled or failed', err);
-        }
-    } else {
-        // Fallback: Copy to clipboard
-        const shareStr = `${text}\nPlay here: ${url}`;
+    const shareData = { title, text, url };
+    const shareStr = `${text}\nPlay here: ${url}`;
+
+    // Helper to copy to clipboard
+    const copyToClipboard = () => {
         navigator.clipboard.writeText(shareStr).then(() => {
             showToast('Invite link & stats copied to clipboard! 📋');
         }).catch(err => {
             showToast('Could not copy link. Manual copy required.');
         });
+    };
+
+    if (navigator.share) {
+        try {
+            // Note: Many desktop browsers support the API but then fail at runtime
+            await navigator.share(shareData);
+            showToast('Shared successfully! 🌐');
+        } catch (err) {
+            console.log('Web Share failed/aborted, using clipboard fallback.', err);
+            copyToClipboard();
+        }
+    } else {
+        copyToClipboard();
     }
 }
 
