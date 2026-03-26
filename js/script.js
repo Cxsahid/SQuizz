@@ -1573,7 +1573,7 @@ async function sharePlatform(type) {
     if(type === 'rank') {
         const rank = document.getElementById('heroRankGlobal')?.textContent || "#?";
         const xp = document.getElementById('heroRankXp')?.textContent || "0 XP";
-        text = `I'm currently ${rank} on SQuizz avec ${xp}! Can you beat my score? 🏆`;
+        text = `I'm currently ${rank} on SQuizz with ${xp}! Can you beat my score? 🏆`;
     } else if(type === 'score') {
         const score = document.getElementById('finalScoreText')?.textContent || "0/0";
         const category = document.getElementById('quizCategoryBadge')?.textContent || "a quiz";
@@ -1585,16 +1585,21 @@ async function sharePlatform(type) {
 
     // Helper to copy to clipboard
     const copyToClipboard = () => {
-        navigator.clipboard.writeText(shareStr).then(() => {
-            showToast('Invite link & stats copied to clipboard! 📋');
-        }).catch(err => {
-            showToast('Could not copy link. Manual copy required.');
-        });
+        console.log('SQuizz: Triggering clipboard fallback...');
+        if(navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(shareStr).then(() => {
+                showToast('Invite link & stats copied to clipboard! 📋');
+            }).catch(err => {
+                console.error('SQuizz: Clipboard write failed', err);
+                showToast('Could not copy link. Manual copy required.');
+            });
+        } else {
+            showToast('Share Link: ' + url);
+        }
     };
 
     if (navigator.share) {
         try {
-            // Note: Many desktop browsers support the API but then fail at runtime
             await navigator.share(shareData);
             showToast('Shared successfully! 🌐');
         } catch (err) {
