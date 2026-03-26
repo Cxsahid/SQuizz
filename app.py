@@ -11,11 +11,31 @@ import uuid
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 
+import socket
+
 app = Flask(__name__, static_url_path='', static_folder='.')
 app.config['UPLOAD_FOLDER'] = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'uploads')
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 CORS(app)
 socketio = SocketIO(app, cors_allowed_origins="*")
+
+def get_local_ip():
+    try:
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.connect(("8.8.8.8", 80))
+        ip = s.getsockname()[0]
+        s.close()
+        return ip
+    except:
+        return "localhost"
+
+@app.route('/api/network-info')
+def get_network_info():
+    return jsonify({
+        'local_ip': get_local_ip(),
+        'port': 8082,
+        'website_name': 'SQuizz'
+    })
 
 # Load questions securely into backend RAM for multiplayer syncing
 QUESTIONS_DATA = []
@@ -489,6 +509,44 @@ def get_all_user_progress(username):
             "xp": r['max_score'] * 100
         }
     return jsonify(progress_map)
+
+@app.route('/api/rank/<username>/<quiz_name>', methods=['GET'])
+def get_user_quiz_rank(username, quiz_name):
+    conn = get_db_connection()
+    
+    # Calculate rank for this specific quiz
+    rank_row = conn.execute('''
+        WITH RankedUsers AS (
+            SELECT username, MAX(score) as max_score
+            FROM quiz_results
+            WHERE quiz_name = ?
+            GROUP BY username
+        )
+        SELECT COUNT(*) + 1 as rank
+        FROM RankedUsers
+        WHERE max_score > (
+            SELECT COALESCE(MAX(score), 0) 
+            FROM quiz_results 
+            WHERE username = ? AND quiz_name = ?
+        ) AND max_score > 0
+    ''', (quiz_name, username, quiz_name)).fetchone()
+    
+    # Also check if user even played this quiz
+    user_score = conn.execute(
+        'SELECT MAX(score) as max_score FROM quiz_results WHERE username = ? AND quiz_name = ?',
+        (username, quiz_name)
+    ).fetchone()
+    
+    conn.close()
+    
+    has_played = user_score and user_score['max_score'] is not None and user_score['max_score'] > 0
+    rank = rank_row['rank'] if rank_row and has_played else 0
+    xp = (user_score['max_score'] * 100) if has_played else 0
+
+    return jsonify({
+        'rank': rank,
+        'xp': xp
+    })
 
 # --- PHASE 14 MULTIPLAYER SOCKETS ---
 

@@ -172,8 +172,7 @@ function updateNavUser() {
             <button class="btn btn-outline" style="padding: 0.3rem 0.8rem; font-size: 0.8rem; margin-left: 1rem;" id="logoutBtn">Logout</button>
         `;
         
-        const badge = document.getElementById('userBadge');
-        if(badge) badge.onclick = () => switchView('profile');
+        // Removed direct onclick here to rely on the delegation in bindEvents which handles async loadProfile correctly
 
         const logout = document.getElementById('logoutBtn');
         if(logout) logout.onclick = () => {
@@ -226,11 +225,11 @@ async function logActivity() {
     } catch(e) { console.log('Streak API offline. Running in Local-Only mode.'); }
 }
 
-async function loadProfile() {
-    if(!State.user) return;
+async function loadProfile(username = State.user) {
+    if(!username) return;
 
     try {
-        const res = await fetch(`/api/profile/${State.user}`);
+        const res = await fetch(`/api/profile/${username}`);
         if(!res.ok) throw new Error('Profile fetch failed');
 
         const data = await res.json();
@@ -246,7 +245,7 @@ async function loadProfile() {
         }
         
         const usernameElem = document.getElementById('profileUsername');
-        if (usernameElem) usernameElem.textContent = data.username || State.user;
+        if (usernameElem) usernameElem.textContent = data.username || username;
         
         const totalQuizzesElem = document.getElementById('profileTotalQuizzes');
         if (totalQuizzesElem) totalQuizzesElem.textContent = data.total_quizzes_played ?? 0;
@@ -305,10 +304,66 @@ async function loadProfile() {
         // Render Performance Chart
         renderPerformanceChart(data.quiz_history);
 
+        // Fetch User Progress for Topic Mastery section
+        const progRes = await fetch(`/api/user/progress/${username}`);
+        if(progRes.ok) {
+            const userProgress = await progRes.json();
+            renderTopicMastery(userProgress);
+        }
+
+        // Handle Edit Profile button visibility
+        const editBtn = document.getElementById('editProfileBtn');
+        if (editBtn) {
+            editBtn.style.display = (username === State.user) ? 'block' : 'none';
+        }
+
+        // NEW: Update Streak Progress Text in feature card
+        const streakProgressText = document.getElementById('streakProgressText');
+        if(streakProgressText) {
+            const streak = data.current_streak ?? 0;
+            streakProgressText.textContent = `${streak}/30`;
+        }
+
     } catch (e) {
         console.error("Failed to load profile data", e);
         // Display error state in UI
     }
+}
+
+window.viewUserProfile = async function(username) {
+    if(!username) return;
+    await loadProfile(username);
+    switchView('profile');
+};
+
+function renderTopicMastery(progressObj) {
+    const list = document.getElementById('profileTopicMastery');
+    if (!list) return;
+    
+    if (Object.keys(progressObj).length === 0) {
+        list.innerHTML = '<p class="profile-empty" style="color:var(--text-secondary)">No topic data yet.</p>';
+        return;
+    }
+    
+    let html = '';
+    for (const [topic, data] of Object.entries(progressObj)) {
+        html += `
+        <div style="margin-bottom: 1.2rem; background: rgba(255,255,255,0.02); padding: 0.8rem; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);">
+            <div style="display:flex; justify-content:space-between; margin-bottom:0.5rem; font-size:0.95rem; font-weight: 500;">
+                <span>${topic}</span>
+                <span class="text-gradient">${data.percentage}%</span>
+            </div>
+            <div class="progress-bar-bg" style="height: 6px; margin-bottom: 0.5rem;">
+                <div class="progress-bar-fill progress-animated" style="width: ${data.percentage}%;"></div>
+            </div>
+            <div style="display:flex; justify-content:space-between; font-size:0.8rem; color:var(--text-secondary);">
+                <span>🎯 Accuracy: <span style="color:#fff;">${data.accuracy}%</span></span>
+                <span>⏱️ Time: <span style="color:#fff;">${data.avgTime}</span></span>
+                <span style="color:var(--primary);">${data.xp} XP</span>
+            </div>
+        </div>`;
+    }
+    list.innerHTML = html;
 }
 
 function renderHistory(history) {
@@ -335,23 +390,32 @@ function renderHeatmap(history) {
     });
 
     let heatmapHTML = '';
+    // We group cubes into columns of 7 (one for each day of the week)
+    let columnHTML = '';
     for (let i = days; i >= 0; i--) {
         const date = new Date(today);
         date.setDate(today.getDate() - i);
         const dateString = date.toISOString().split('T')[0];
         const count = contributions[dateString] || 0;
         
-        let level = 0;
-        if (count > 0) level = 1;
-        if (count > 2) level = 2;
-        if (count >= 5) level = 3;
+        let level = (count > 0) ? 1 : 0;
         
-        heatmapHTML += `
+        columnHTML += `
             <div class="heatmap-cube" data-level="${level}">
-                <div class="tooltip">${count} quizzes on ${dateString}</div>
+                <div class="tooltip">${count} quizzes on ${dateStr(date)}</div>
             </div>`;
+            
+        // Every 7 days or at the end, wrap in a column div for a grid look
+        if (i % 7 === 0 || i === 0) {
+            heatmapHTML += `<div class="heatmap-column">${columnHTML}</div>`;
+            columnHTML = '';
+        }
     }
     heatmapContainer.innerHTML = heatmapHTML;
+}
+
+function dateStr(date) {
+    return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
 }
 
 function renderTimeline(history) {
@@ -570,6 +634,25 @@ function bindEvents() {
         });
     }
 
+    // Daily Streak Reward Toggle
+    const streakOption = document.getElementById('streakRewardOption');
+    const streakModal = document.getElementById('streakRewardModal');
+    const closeStreakModal = document.getElementById('closeStreakModal');
+    
+    if(streakOption && streakModal) {
+        streakOption.addEventListener('click', openStreakRewardsModal);
+        
+        if(closeStreakModal) {
+            closeStreakModal.addEventListener('click', () => {
+                streakModal.style.display = 'none';
+            });
+        }
+        // Close on clicking overlay
+        streakModal.addEventListener('click', (e) => {
+            if(e.target === streakModal) streakModal.style.display = 'none';
+        });
+    }
+
     if(UI.tagBar) {
         UI.tagBar.addEventListener('click', (e) => {
             if(e.target.classList.contains('tag')) {
@@ -578,6 +661,16 @@ function bindEvents() {
                 State.currentTag = e.target.dataset.tag;
                 renderCategories();
             }
+        });
+    }
+
+    // Leaderboard Search Search Logic
+    const lbSearch = document.getElementById('lbSearchInput');
+    if(lbSearch) {
+        lbSearch.addEventListener('input', (e) => {
+            const term = e.target.value.toLowerCase().trim();
+            const filtered = currentLeaderboardData.filter(u => u.username.toLowerCase().includes(term));
+            renderLeaderboard(filtered);
         });
     }
 
@@ -801,6 +894,77 @@ function switchView(viewName) {
         typeWriterSubtitle();
     }
 }
+
+window.activateFeature = async function(type) {
+    if(type === 'streak') {
+        if(!State.user) {
+            showToast('Please login to view streak rewards! 🔥');
+            switchView('login');
+            return;
+        }
+        // Switch to profile
+        await loadProfile();
+        switchView('profile');
+        
+        // Open the modal
+        openStreakRewardsModal();
+
+        // Scroll to the feature card on the profile dashboard
+        const profileStreakOpt = document.getElementById('streakRewardOption');
+        if(profileStreakOpt) {
+            profileStreakOpt.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+    } else if(type === 'multiplayer') {
+        if(!State.user) {
+            showToast("Please Log In to play Multiplayer!");
+            return switchView('login');
+        }
+        const sel = document.getElementById('mpHostCategory');
+        if(sel && sel.options.length === 0) {
+            State.categories.forEach(c => {
+                const opt = document.createElement('option');
+                opt.value = c.id;
+                opt.textContent = c.name;
+                sel.appendChild(opt);
+            });
+        }
+        switchView('multiplayer');
+    } else if(type === 'leaderboard') {
+        if(!State.user) return switchView('login');
+        showLeaderboard();
+    } else if(type === 'connect') {
+        openMobileConnectModal();
+    } else if(type === 'ai') {
+        const topic = prompt("Enter a topic for the AI to generate a quiz about:");
+        if(topic) {
+            showToast(`🤖 AI Generator Processing "${topic}"...`);
+            setTimeout(() => {
+                State.searchQuery = topic;
+                if(document.getElementById('topicSearchInput')) {
+                    document.getElementById('topicSearchInput').value = topic;
+                    document.getElementById('topicSearchInput').dispatchEvent(new Event('input'));
+                }
+                switchView('categories');
+            }, 1500);
+        }
+    } else if(type === 'smart') {
+        if(!State.user) return switchView('login');
+        const hardQs = State.categories.flatMap(c => c.questions.filter(q => q.difficulty === 'hard'));
+        if(hardQs.length > 0) {
+            const mixedCategory = {
+                name: "Smart Learning (Challenge)",
+                icon: "🧠",
+                timeLimit: 12,
+                questions: hardQs.sort(() => Math.random() - 0.5).slice(0, 10)
+            };
+            startQuiz(mixedCategory);
+        }
+    } else {
+        // Default to categories
+        if(!State.user) switchView('login');
+        else switchView('categories');
+    }
+};
 
 // Phase 11 Typewriter Effect
 let typewriterTimeout;
@@ -1096,6 +1260,8 @@ function resetQuiz() {
     clearInterval(State.totalTimeInterval);
 }
 
+let currentLeaderboardData = [];
+
 function showLeaderboard() {
     switchView('leaderboard');
     if(!UI.leaderboardContent) return;
@@ -1103,46 +1269,51 @@ function showLeaderboard() {
     fetch('/api/leaderboard')
         .then(res => res.json())
         .then(lbData => {
-            if(lbData.length === 0) {
-                UI.leaderboardContent.innerHTML = "<p class='text-center'>No rankings yet. Be the first!</p>";
-                return;
-            }
-            
-            let html = `<div class="lb-row lb-header"><span>Rank</span><span>Player</span><span>Score</span><span>Focus Time</span></div>`;
-            lbData.forEach((entry) => {
-                let rankColor = '';
-                if(entry.rank === 1) rankColor = 'color: #FFD700; font-weight: 800; text-shadow: 0 0 12px rgba(255, 215, 0, 0.6); font-size: 1.15rem;';
-                else if(entry.rank === 2) rankColor = 'color: #E2E8F0; font-weight: 700; text-shadow: 0 0 10px rgba(226, 232, 240, 0.5); font-size: 1.1rem;';
-                else if(entry.rank === 3) rankColor = 'color: #CD7F32; font-weight: 700; text-shadow: 0 0 10px rgba(205, 127, 50, 0.5); font-size: 1.05rem;';
-                else rankColor = 'color: var(--text-secondary); font-weight: 500; font-size: 1rem;';
-
-                let level = entry.xp > 1000 ? "Master 🌟" : entry.xp > 500 ? "Expert 💎" : entry.xp > 200 ? "Intermediate 🔥" : "Beginner";
-                
-                let timeStr = "0s";
-                if(entry.time > 0) {
-                    const h = Math.floor(entry.time / 3600);
-                    const m = Math.floor((entry.time % 3600) / 60);
-                    const s = entry.time % 60;
-                    let parts = [];
-                    if (h > 0) parts.push(`${h}h`);
-                    if (m > 0 || h > 0) parts.push(`${m}m`);
-                    parts.push(`${s}s`);
-                    timeStr = parts.join(' ');
-                }
-                
-                html += `<div class="lb-row">
-                            <span class="rank-badge" style="${rankColor}">#${entry.rank}</span>
-                            <span class="lb-name">${entry.username} <small style="color:var(--primary); font-size:0.75rem;">${level}</small></span>
-                            <span class="lb-score">${entry.xp} XP</span>
-                            <span>${timeStr}</span>
-                         </div>`;
-            });
-            UI.leaderboardContent.innerHTML = html;
+            currentLeaderboardData = lbData;
+            renderLeaderboard(lbData);
         })
         .catch(err => {
             UI.leaderboardContent.innerHTML = "<p class='text-center text-danger'>Global rankings temporarily unavailable.</p>";
             console.error(err);
         });
+}
+
+function renderLeaderboard(lbData) {
+    if(lbData.length === 0) {
+        UI.leaderboardContent.innerHTML = "<p class='text-center' style='color:var(--text-secondary);'>No players match your search.</p>";
+        return;
+    }
+    
+    let html = `<div class="lb-row lb-header"><span>Rank</span><span>Player</span><span>Score</span><span>Focus Time</span></div>`;
+    lbData.forEach((entry) => {
+        let rankColor = '';
+        if(entry.rank === 1) rankColor = 'color: #FFD700; font-weight: 800; text-shadow: 0 0 12px rgba(255, 215, 0, 0.6); font-size: 1.15rem;';
+        else if(entry.rank === 2) rankColor = 'color: #E2E8F0; font-weight: 700; text-shadow: 0 0 10px rgba(226, 232, 240, 0.5); font-size: 1.1rem;';
+        else if(entry.rank === 3) rankColor = 'color: #CD7F32; font-weight: 700; text-shadow: 0 0 10px rgba(205, 127, 50, 0.5); font-size: 1.05rem;';
+        else rankColor = 'color: var(--text-secondary); font-weight: 500; font-size: 1rem;';
+
+        let level = entry.xp > 1000 ? "Master 🌟" : entry.xp > 500 ? "Expert 💎" : entry.xp > 200 ? "Intermediate 🔥" : "Beginner";
+        
+        let timeStr = "0s";
+        if(entry.time > 0) {
+            const h = Math.floor(entry.time / 3600);
+            const m = Math.floor((entry.time % 3600) / 60);
+            const s = entry.time % 60;
+            let parts = [];
+            if (h > 0) parts.push(`${h}h`);
+            if (m > 0 || h > 0) parts.push(`${m}m`);
+            parts.push(`${s}s`);
+            timeStr = parts.join(' ');
+        }
+        
+        html += `<div class="lb-row" onclick="viewUserProfile('${entry.username}')" style="cursor: pointer; transition: background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background=''">
+                    <span class="rank-badge" style="${rankColor}">#${entry.rank}</span>
+                    <span class="lb-name">${entry.username} <small style="color:var(--primary); font-size:0.75rem;">${level}</small></span>
+                    <span class="lb-score">${entry.xp} XP</span>
+                    <span>${timeStr}</span>
+                 </div>`;
+    });
+    UI.leaderboardContent.innerHTML = html;
 }
 
 // Phase 13 Feature Activation
@@ -1156,73 +1327,6 @@ function showToast(msg) {
     }, 4000);
 }
 
-window.activateFeature = function(type) {
-    switch(type) {
-        case 'leaderboard':
-            if(!State.user) return switchView('login');
-            showLeaderboard();
-            break;
-        case 'streak':
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-            const sc = document.getElementById('streakCardContainer');
-            if(sc) {
-                sc.style.transform = 'scale(1.1)';
-                sc.style.boxShadow = '0 0 30px #f97316';
-                setTimeout(() => {
-                    sc.style.transform = '';
-                    sc.style.boxShadow = '';
-                }, 1000);
-            }
-            break;
-        case 'voice':
-            State.voiceMode = !State.voiceMode;
-            showToast(State.voiceMode ? '🎙️ Voice Mode Activated!<br><small>Questions will be read aloud.</small>' : '🔇 Voice Mode Deactivated.');
-            break;
-        case 'multiplayer':
-            if(!State.user) {
-                showToast("Please Log In to play Multiplayer!");
-                return switchView('login');
-            }
-            const sel = document.getElementById('mpHostCategory');
-            if(sel && sel.options.length === 0) {
-                State.categories.forEach(c => {
-                    const opt = document.createElement('option');
-                    opt.value = c.id;
-                    opt.textContent = c.name;
-                    sel.appendChild(opt);
-                });
-            }
-            switchView('multiplayer');
-            break;
-        case 'ai':
-            const topic = prompt("Enter a topic for the AI to generate a quiz about:");
-            if(topic) {
-                showToast(`🤖 AI Generator Processing "${topic}"...`);
-                setTimeout(() => {
-                    State.searchQuery = topic;
-                    if(document.getElementById('topicSearchInput')) {
-                        document.getElementById('topicSearchInput').value = topic;
-                        document.getElementById('topicSearchInput').dispatchEvent(new Event('input'));
-                    }
-                    switchView('categories');
-                }, 1500);
-            }
-            break;
-        case 'smart':
-            if(!State.user) return switchView('login');
-            const hardQs = State.categories.flatMap(c => c.questions.filter(q => q.difficulty === 'hard'));
-            if(hardQs.length > 0) {
-                const mixedCategory = {
-                    name: "Smart Learning (Challenge)",
-                    icon: "🧠",
-                    timeLimit: 12,
-                    questions: hardQs.sort(() => Math.random() - 0.5).slice(0, 10)
-                };
-                startQuiz(mixedCategory);
-            }
-            break;
-    }
-}
 
 // Phase 14 Backend Multiplayer Sync Engine
 let socket = null;
@@ -1482,28 +1586,22 @@ async function initDynamicHeroCard() {
         const rankXp = document.getElementById('heroRankXp');
         const streakCount = document.getElementById('streakCountText');
 
-        if(userProfile.xp > 0 || userProfile.global_rank === 1) {
-            if(streakCount) streakCount.textContent = `${userProfile.current_streak || 0} Days`;
-            if(rankXp) rankXp.textContent = `XP: ${(userProfile.xp || 0).toLocaleString()}`;
-            
-            if(rankGlobal) rankGlobal.textContent = `Rank #${userProfile.global_rank}`;
-            
-            if(userProfile.global_rank <= 10) { if(rankTitle) rankTitle.textContent = 'Elite 💎'; }
-            else if(userProfile.global_rank <= 100) { if(rankTitle) rankTitle.textContent = 'Pro 🌟'; }
-            else { if(rankTitle) rankTitle.textContent = 'Challenger 🔥'; }
-        } else {
-            if(streakCount) streakCount.textContent = `0 Days`;
-            if(rankXp) rankXp.textContent = `XP: 0`;
-            if(rankTitle) rankTitle.textContent = 'Unranked';
-            if(rankGlobal) rankGlobal.textContent = 'Play to Rank';
-        }
-
+        if(streakCount) streakCount.textContent = `${userProfile.current_streak || 0} Days`;
+        
         let cycleIdx = 0;
         
-        const updateHeroUI = () => {
+        const updateHeroUI = async () => {
             if(!trendingQuizzes || trendingQuizzes.length === 0) return;
             const q = trendingQuizzes[cycleIdx];
             const p = userProgress[q.title] || { completedQuestions: 0, percentage: 0, accuracy: 0, avgTime: "0s", xp: 0 };
+            
+            let subjectRankInfo = { rank: 0, xp: 0 };
+            if (State.user) {
+                try {
+                    const rankRes = await fetch(`/api/rank/${State.user}/${encodeURIComponent(q.title)}`);
+                    if (rankRes.ok) subjectRankInfo = await rankRes.json();
+                } catch(e) {}
+            }
             
             mainCard.style.opacity = '0';
             mainCard.style.transform = 'perspective(1500px) rotateY(90deg) scale(0.95)';
@@ -1520,6 +1618,19 @@ async function initDynamicHeroCard() {
                 document.getElementById('heroQuizProgressBar').style.width = `${p.percentage}%`;
                 document.getElementById('heroQuizCompletedText').textContent = `${p.completedQuestions}/${q.totalQuestions} Questions Completed`;
                 document.getElementById('heroQuizXpText').textContent = `+${p.xp} XP earned`;
+
+                if (subjectRankInfo.rank > 0) {
+                    if (rankXp) rankXp.textContent = `XP: ${subjectRankInfo.xp.toLocaleString()}`;
+                    if (rankGlobal) rankGlobal.textContent = `Rank #${subjectRankInfo.rank}`;
+                    
+                    if (subjectRankInfo.rank <= 10) { if (rankTitle) rankTitle.textContent = 'Elite 💎'; }
+                    else if (subjectRankInfo.rank <= 100) { if (rankTitle) rankTitle.textContent = 'Pro 🌟'; }
+                    else { if (rankTitle) rankTitle.textContent = 'Challenger 🔥'; }
+                } else {
+                    if (rankXp) rankXp.textContent = `XP: 0`;
+                    if (rankGlobal) rankGlobal.textContent = State.user ? `Unranked` : 'Play to Rank';
+                    if (rankTitle) rankTitle.textContent = 'Top Rank';
+                }
                 
                 mainCard.onclick = () => {
                     if(!State.user) return showToast('Please login to play trending quizzes.');
@@ -1593,8 +1704,6 @@ async function sharePlatform(type) {
                 console.error('SQuizz: Clipboard write failed', err);
                 showToast('Could not copy link. Manual copy required.');
             });
-        } else {
-            showToast('Share Link: ' + url);
         }
     };
 
@@ -1608,6 +1717,102 @@ async function sharePlatform(type) {
         }
     } else {
         copyToClipboard();
+    }
+}
+
+function showStreakRewards() {
+    const streak = parseInt(document.getElementById('profileStreak')?.textContent || '0');
+    const fill = document.getElementById('streakRewardFill');
+    const grid = document.getElementById('rewardGrid');
+    
+    if(fill) {
+        const pct = Math.min((streak / 30) * 100, 100);
+        fill.style.width = pct + '%';
+    }
+    
+    // Update milestones
+    document.querySelectorAll('.milestone').forEach(m => {
+        const day = parseInt(m.dataset.day);
+        if(streak >= day) m.classList.add('achieved');
+        else m.classList.remove('achieved');
+    });
+    
+    // Render rewards
+    const rewards = [
+        { day: 3, name: "Bronze Badge", icon: "🥉", xp: 500 },
+        { day: 7, name: "Silver Badge", icon: "🥈", xp: 1500 },
+        { day: 15, name: "Gold Badge", icon: "🥇", xp: 5000 },
+        { day: 30, name: "Legendary Title", icon: "👑", xp: 15000 }
+    ];
+    
+    if(grid) {
+        grid.innerHTML = rewards.map(r => `
+            <div class="reward-card ${streak >= r.day ? 'achieved' : ''}">
+                <span class="reward-icon">${r.icon}</span>
+                <span class="reward-name">${r.name}</span>
+                <span class="reward-status">${streak >= r.day ? 'Claimed' : 'Locked'}</span>
+                <div style="font-size:0.75rem; color:var(--primary); margin-top:5px">+${r.xp} XP</div>
+            </div>
+        `).join('');
+    }
+}
+
+function openStreakRewardsModal() {
+    const streakModal = document.getElementById('streakRewardModal');
+    if(streakModal) {
+        showStreakRewards();
+        streakModal.style.display = 'grid';
+    }
+}
+
+async function openMobileConnectModal() {
+    const modal = document.getElementById('mobileConnectModal');
+    const display = document.getElementById('networkUrlDisplay');
+    if(!modal || !display) return;
+    
+    modal.style.display = 'grid';
+    display.textContent = "Detecting SQuizz Network Node...";
+    
+    // NOTE: Hardcoded Public Tunnel URL. Update this whenever the Cloudflare tunnel restarts.
+    const publicUrl = "https://accomplish-quantity-researcher-paste.trycloudflare.com";
+    const protocol = window.location.protocol;
+    
+    try {
+        const res = await fetch('/api/network-info');
+        const data = await res.json();
+        const localUrl = `${protocol}//${data.local_ip}:${data.port}`;
+        
+        // Use public URL if available, otherwise fallback to detected local
+        display.innerHTML = `
+            <div style="margin-bottom: 1rem;">
+                <small style="color: var(--text-secondary); display: block; margin-bottom: 0.3rem;">Official Release Link:</small>
+                <span style="color: var(--primary); font-weight: bold; font-size: 1.1rem;">${publicUrl}</span>
+            </div>
+            <div style="border-top: 1px solid rgba(255,255,255,0.05); padding-top: 1rem;">
+                <small style="color: var(--text-secondary); display: block; margin-bottom: 0.3rem;">Local Network Link:</small>
+                <span style="color: #10b981; font-size: 0.9rem;">${localUrl}</span>
+            </div>
+        `;
+        display.dataset.copyUrl = publicUrl; 
+    } catch (e) {
+        display.textContent = publicUrl;
+        display.dataset.copyUrl = publicUrl;
+    }
+}
+
+function copyNetworkUrl() {
+    const display = document.getElementById('networkUrlDisplay');
+    const url = display?.dataset.copyUrl || display?.textContent.trim();
+    if(!url || url.includes('Detecting')) return;
+    
+    const shareText = `Play SQuizz with me! 🚀\nJoin here: ${url}`;
+    
+    if(navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(shareText).then(() => {
+            showToast('SQuizz link copied! 📋<br>Open it on your phone now.');
+        });
+    } else {
+        showToast('Link: ' + url);
     }
 }
 

@@ -12,9 +12,11 @@ Built using both **manual web development** and **AI-assisted techniques**, SQui
 ## 🚀 Features
 
 * 🎮 Interactive quiz gameplay
-* ⏱️ Real-time scoring system
-* 📊 Instant result display
-* 💡 User-friendly interface
+* ⚔️ Real-time Multiplayer Battle Mode
+* 🔥 Daily Streak Rewards system
+* 🌍 Global Leaderboard & Rankings
+* 📱 SQuizz Mobile Connect (Remote access)
+* 📊 Interactive Performance Dashboard
 * 📱 Responsive design (works on mobile & desktop)
 
 ---
