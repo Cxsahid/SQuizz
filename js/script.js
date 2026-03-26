@@ -1568,7 +1568,7 @@ showToast = function(msg) {
 async function sharePlatform(type) {
     let title = "SQuizz - Premium Quiz Platform";
     let text = "Check out this awesome quiz platform! 🚀";
-    let url = "http://10.136.3.60:8082";
+    let url = window.location.origin;
 
     if(type === 'rank') {
         const rank = document.getElementById('heroRankGlobal')?.textContent || "#?";
